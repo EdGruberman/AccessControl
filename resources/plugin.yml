@@ -1,0 +1,171 @@
+name: @NAME@
+description: Native Bukkit permissions, player security groups, and securable resource management
+version: @VERSION@
+author: @AUTHOR@
+main: @MAIN@
+commands:
+    'accesscontrol:player.check':
+        description: Check current effective value of a specific permission for player
+        permission: accesscontrol.player.check
+        usage: /<command> <Permission>[ [<World>:]<Player>]
+    'accesscontrol:player.show':
+        description: Show permissions and memberships for player
+        permission: accesscontrol.player.show
+        usage: /<command>[ <Player>[ <Page>]]
+    'accesscontrol:player.addpermission':
+        description: Add direct permission entry for player
+        permission: accesscontrol.player.addpermission
+        usage: /<command> [<World>:]<Player> <Permission> (true|false|unset)
+    'accesscontrol:player.removepermission':
+        description: Remove direct permission entry for player
+        permission: accesscontrol.player.removepermission
+        usage: /<command> [<World>:]<Player> <Permission>
+    'accesscontrol:player.addmembership':
+        description: Add direct membership in a group for player
+        permission: accesscontrol.player.addmembership
+        usage: /<command> [<World>:]<Player> <Group>
+    'accesscontrol:player.removemembership':
+        description: Remove direct membership in a group for player
+        permission: accesscontrol.player.removemembership
+        usage: /<command> [<World>:]<Player> <Group>
+    'accesscontrol:player.delete':
+        description: Remove all direct permissions and memberships for player
+        permission: accesscontrol.player.delete
+        usage: /<command> <Player>
+    'accesscontrol:group.list':
+        description: List names of all groups
+        permission: accesscontrol.group.list
+    'accesscontrol:group.show':
+        description: Show permissions and memberships for group
+        permission: accesscontrol.group.show
+        usage: /<command> <Group>[ <Page>]
+    'accesscontrol:group.addpermission':
+        description: Add direct permission entry for group
+        permission: accesscontrol.group.addpermission
+        usage: /<command> [<World>:]<Group> <Permission> (true|false|unset)
+    'accesscontrol:group.removepermission':
+        description: Remove direct permission entry for group
+        permission: accesscontrol.group.removepermission
+        usage: /<command> [<World>:]<Group> <Permission>
+    'accesscontrol:group.addmembership':
+        description: Add direct membership in a group for group
+        permission: accesscontrol.group.addmembership
+        usage: /<command> <ChildGroup> <ParentGroup>
+    'accesscontrol:group.removemembership':
+        description: Remove direct membership in a group for group
+        permission: accesscontrol.group.removemembership
+        usage: /<command> <ChildGroup> <ParentGroup>
+    'accesscontrol:group.delete':
+        description: Remove all direct permissions and memberships for group
+        permission: accesscontrol.group.delete
+        usage: /<command> <Group>
+    'accesscontrol:group.addmember':
+        description: Add direct membership in a group for user or group
+        permission: accesscontrol.group.addmember
+        usage: /<command> <User>|<ChildGroup> <ParentGroup>
+    'accesscontrol:group.removemember':
+        description: Remove direct membership in a group for user or group
+        permission: accesscontrol.group.removemember
+        usage: /<command> <User>|<ChildGroup> <ParentGroup>
+    'accesscontrol:group.default':
+        description: Configure group as default or not
+        permission: accesscontrol.group.default
+        usage: /<command> <Group> (true|false)
+    'accesscontrol:reload':
+        description: Reload all from configuration file
+        permission: accesscontrol.reload
+permissions:
+    accesscontrol.all:
+        description: Can use all AccessControl plugin commands
+        default: op
+        children:
+            accesscontrol.player.check: true
+            accesscontrol.player.show: true
+            accesscontrol.player.addpermission: true
+            accesscontrol.player.removepermission: true
+            accesscontrol.player.addmembership: true
+            accesscontrol.player.removemembership: true
+            accesscontrol.player.delete: true
+            accesscontrol.group.list: true
+            accesscontrol.group.show: true
+            accesscontrol.group.addpermission: true
+            accesscontrol.group.removepermission: true
+            accesscontrol.group.addmembership: true
+            accesscontrol.group.removemembership: true
+            accesscontrol.group.delete: true
+            accesscontrol.group.addmember: true
+            accesscontrol.group.removemember: true
+            accesscontrol.group.default: true
+            accesscontrol.reload: true
+    accesscontrol.player.check.self:
+        description: Can use player.check command on self
+        default: true
+    accesscontrol.player.check.others:
+        description: Can use player.check command on any player
+        default: false
+    accesscontrol.player.check:
+        description: Can use player.check command for any player
+        default: false
+        children:
+            accesscontrol.player.check.self: true
+            accesscontrol.player.check.others: true
+    accesscontrol.player.show.self:
+        description: Can use player.show command on self
+        default: true
+    accesscontrol.player.show.others:
+        description: Can use player.show command on any player
+        default: false
+    accesscontrol.player.show:
+        description: Can use player.show command for any player
+        default: false
+        children:
+            accesscontrol.player.show.self: true
+            accesscontrol.player.show.others: true
+    accesscontrol.player.addpermission:
+        description: Can use player.addpermission command
+        default: false
+    accesscontrol.player.removepermission:
+        description: Can use player.removepermission command
+        default: false
+    accesscontrol.player.addmembership:
+        description: Can use player.addmembership command
+        default: false
+    accesscontrol.player.removemembership:
+        description: Can use player.removemembership command
+        default: false
+    accesscontrol.player.delete:
+        description: Can use player.delete command
+        default: false
+    accesscontrol.group.list:
+        description: Can use group.list command
+        default: false
+    accesscontrol.group.show:
+        description: Can use group.show command
+        default: false
+    accesscontrol.group.addpermission:
+        description: Can use group.addpermission command
+        default: false
+    accesscontrol.group.removepermission:
+        description: Can use group.removepermission command
+        default: false
+    accesscontrol.group.addmembership:
+        description: Can use group.addmembership command
+        default: false
+    accesscontrol.group.removemembership:
+        description: Can use group.removemembership command
+        default: false
+    accesscontrol.group.delete:
+        description: Can use group.delete command
+        default: false
+    accesscontrol.group.addmember:
+        description: Can use group.addmember command
+        default: false
+    accesscontrol.group.removemember:
+        description: Can use group.removemember command
+        default: false
+    accesscontrol.group.default:
+        description: Can use group.default command
+        default: false
+    accesscontrol.reload:
+        description: Can use group.reload command
+        default: false
