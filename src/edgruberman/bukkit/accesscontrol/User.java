@@ -20,14 +20,18 @@ public final class User extends Principal {
         this.setTemporary(true);
     }
 
+    // TODO isolate membership management functions so temporary/removals don't cause cascading unexpected results
     @Override
     public boolean delete() {
         this.detach();
 
-        for (final Group group : this.memberships)
-            this.removeMembership(group);
+        for (final Group group : this.memberships) {
+            group.members.remove(this);
+        }
+        this.memberships.clear();
 
-        return (this.manager.users.remove(this) != null);
+        this.manager.temporaryUsers.remove(this);
+        return (this.manager.users.remove(this.name.toLowerCase()) != null);
     }
 
     @Override
@@ -45,7 +49,7 @@ public final class User extends Principal {
     }
 
     @Override
-    public Set<Group> inheritedMemberships() {
+    public Set<Group> configuredMemberships() {
         return this.cachedMemberships;
     }
 
@@ -54,7 +58,7 @@ public final class User extends Principal {
     }
 
     public boolean update() {
-        this.cachedMemberships = super.inheritedMemberships();
+        this.cachedMemberships = super.configuredMemberships();
 
         // TODO ? for each membership, m.directPermissions(world)
 

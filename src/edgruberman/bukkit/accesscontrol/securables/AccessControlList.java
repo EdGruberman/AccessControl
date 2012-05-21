@@ -50,7 +50,7 @@ public class AccessControlList {
 
         if (this.owners.size() == 0) return false;
 
-        for (final Group group : principal.inheritedMemberships())
+        for (final Group group : principal.configuredMemberships())
             if (this.owners.contains(group)) return true;
 
         return false;

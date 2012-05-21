@@ -17,10 +17,13 @@ public final class Group extends Principal {
 
     @Override
     public boolean delete() {
-        for (final Principal member : this.members)
-            member.removeMembership(this);
+        for (final Principal member : this.members) {
+            member.memberships.remove(this);
+        }
+        this.members.clear();
 
-        return (this.manager.groups.remove(this) != null);
+        this.manager.defaultGroups.remove(this);
+        return (this.manager.groups.remove(this.name.toLowerCase()) != null);
     }
 
     public boolean addMember(final Principal principal) {

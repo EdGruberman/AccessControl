@@ -134,14 +134,22 @@ public abstract class Principal {
         return this.memberships;
     }
 
-    public Set<Group> inheritedMemberships() {
+    public Set<Group> configuredMemberships() {
         final Set<Group> inherited = new LinkedHashSet<Group>();
 
         for (final Group group : this.memberships)
-            inherited.addAll(group.inheritedMemberships());
+            inherited.addAll(group.configuredMemberships());
 
         inherited.addAll(this.memberships);
         return inherited;
+    }
+
+    public boolean configuredAs(final Principal other) {
+        if (this.equals(other)) return true;
+
+        if (this.configuredMemberships().contains(other)) return true;
+
+        return false;
     }
 
     @Override

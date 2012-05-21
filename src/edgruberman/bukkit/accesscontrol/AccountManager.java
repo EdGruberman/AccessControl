@@ -121,9 +121,9 @@ public class AccountManager implements Listener {
      */
     public Principal getAccount(final String name) {
         if (this.isFormattedGroupName(name))
-            return this.getGroup(this.extractName(name));
+            return this.createGroup(this.extractName(name));
 
-        return this.getUser(name);
+        return this.createUser(name);
     }
 
     public String formatName(final Principal principal) {
@@ -146,6 +146,10 @@ public class AccountManager implements Listener {
         if (name == null) return false;
 
         return name.startsWith("[") && name.endsWith("]");
+    }
+
+    public boolean memberOf(final String member, final String group) {
+        return this.getAccount(member).configuredAs(this.getAccount(group));
     }
 
     @EventHandler(priority = EventPriority.LOWEST)

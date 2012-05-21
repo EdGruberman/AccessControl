@@ -3,9 +3,7 @@ package edgruberman.bukkit.accesscontrol.securables;
 import java.util.HashSet;
 import java.util.Set;
 
-import edgruberman.bukkit.accesscontrol.Group;
 import edgruberman.bukkit.accesscontrol.Principal;
-import edgruberman.bukkit.accesscontrol.User;
 
 /**
  *  Relates permissions to a principal.
@@ -50,13 +48,7 @@ public class AccessControlEntry {
     }
 
     public boolean appliesTo(final Principal other) {
-        if (this.principal instanceof User)
-            return this.principal.equals(other);
-
-        if (this.principal instanceof Group)
-            return other.inheritedMemberships().contains(this.principal);
-
-        return false;
+        return other.configuredAs(this.principal);
     }
 
     public boolean isAllow() {
