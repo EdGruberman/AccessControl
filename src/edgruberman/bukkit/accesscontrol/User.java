@@ -50,6 +50,7 @@ public final class User extends Principal {
 
     @Override
     public Set<Group> configuredMemberships() {
+        if (this.cachedMemberships == null) this.update();
         return this.cachedMemberships;
     }
 

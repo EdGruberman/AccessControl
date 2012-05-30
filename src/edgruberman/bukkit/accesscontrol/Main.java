@@ -12,8 +12,10 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import edgruberman.bukkit.accesscontrol.commands.PlayerAddMembership;
 import edgruberman.bukkit.accesscontrol.commands.PlayerAddPermission;
 import edgruberman.bukkit.accesscontrol.commands.PlayerCheck;
+import edgruberman.bukkit.accesscontrol.commands.PlayerRemoveMembership;
 import edgruberman.bukkit.accesscontrol.commands.PlayerRemovePermission;
 
 public final class Main extends JavaPlugin {
@@ -29,6 +31,8 @@ public final class Main extends JavaPlugin {
         new PlayerCheck(this, "accesscontrol:player.check", this.manager);
         new PlayerAddPermission(this, "accesscontrol:player.addpermission", this.manager, this.getCommand("accesscontrol:player.check"));
         new PlayerRemovePermission(this, "accesscontrol:player.removepermission", this.manager, this.getCommand("accesscontrol:player.check"));
+        new PlayerAddMembership(this, "accesscontrol:player.addmembership", this.manager);
+        new PlayerRemoveMembership(this, "accesscontrol:player.removemembership", this.manager);
     }
 
     @Override
@@ -126,7 +130,8 @@ public final class Main extends JavaPlugin {
     void save(final ConfigurationSection config) {
         final ConfigurationSection groups = config.createSection("groups");
         for (final Group group : this.manager.groups.values())
-            this.savePrincipal(group, groups);
+            if (group.isDefault() || group.permissions.size() > 0 || group.memberships.size() > 0)
+                this.savePrincipal(group, groups);
 
         final ConfigurationSection users = config.createSection("users");
         for (final User user : this.manager.users.values())

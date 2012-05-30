@@ -87,7 +87,7 @@ public abstract class Principal {
         final Map<String, Boolean> inherited = new HashMap<String, Boolean>();
 
         // Apply permission from root first, then override as we move down inheritance chain
-        for (final Group group : this.memberships)
+        for (final Group group : this.configuredMemberships())
             inherited.putAll(group.configuredPermissions(world));
 
         inherited.putAll(this.directPermissions(world));
