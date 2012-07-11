@@ -15,6 +15,7 @@ public class User extends Principal {
         super(manager, config);
     }
 
+    @Override
     public void update() {
         this.update(this.manager.plugin.getServer().getPlayerExact(this.getName()));
     }

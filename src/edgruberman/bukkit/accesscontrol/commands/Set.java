@@ -90,6 +90,7 @@ public class Set implements CommandExecutor {
         }
 
         principal.setPermission(permission, value, world);
+        principal.update();
         ((Main) this.plugin).save();
         sender.sendMessage(principal.getName() + " now directly sets " + permission + " " + value + " in " + (world == null ? "server" : world));
         return true;

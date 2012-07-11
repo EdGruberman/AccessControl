@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.bukkit.configuration.ConfigurationSection;
 
-public class Principal {
+public abstract class Principal {
 
     final AccountManager manager;
     final ConfigurationSection config;
@@ -17,6 +17,8 @@ public class Principal {
         this.manager = manager;
         this.config = config;
     }
+
+    public abstract void update();
 
     public String getName() {
         return this.config.getName();

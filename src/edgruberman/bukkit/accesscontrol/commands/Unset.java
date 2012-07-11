@@ -68,6 +68,7 @@ public class Unset implements CommandExecutor {
         }
 
         principal.unsetPermission(permission, world);
+        principal.update();
         ((Main) this.plugin).save();
         sender.sendMessage(principal.getName() + " no longer sets " + permission + " in " + (world == null ? "server" : world));
         return true;
