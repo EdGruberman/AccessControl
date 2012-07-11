@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -43,15 +44,28 @@ public class AccountManager implements Listener {
     }
 
     public void load(final MemoryConfiguration usersConfig, final MemoryConfiguration groupsConfig) {
+        // Users
         for (final String name : usersConfig.getKeys(false)) {
             final User user = new User(this, usersConfig.getConfigurationSection(name));
             this.users.put(user.getName().toLowerCase(), user);
         }
 
+        // Groups
         for (final String name : groupsConfig.getKeys(false)) {
             final Group group = new Group(this, groupsConfig.getConfigurationSection(name));
             this.groups.put(group.getName().toLowerCase(), group);
             if (group.isDefault()) this.defaultGroups.put(group.getName().toLowerCase(), group);
+        }
+
+        // Update existing players
+        for (final Player player : this.plugin.getServer().getOnlinePlayers()) {
+            User user = this.getUser(player.getName());
+            if (user == null) {
+                user = this.createUser(player.getName());
+                user.temporary = true;
+            }
+
+            user.update(player);
         }
 
         this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
