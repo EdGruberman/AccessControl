@@ -2,11 +2,11 @@ package edgruberman.bukkit.accesscontrol;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
-import org.bukkit.entity.Player;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -21,7 +21,7 @@ public class AccountManager implements Listener {
     private static Main main = null;
 
     /**
-     * This plugin's main AccountManager instance
+     * Central AccessControl plugin's AccountManager instance
      *
      * @return main AccountManager; null if plugin is disabled
      */
@@ -31,145 +31,133 @@ public class AccountManager implements Listener {
         return AccountManager.main.getAccountManager();
     }
 
-    private final Plugin plugin;
+    final Plugin plugin;
 
-    protected final Map<String, User> users = new HashMap<String, User>();
-    protected final Map<String, Group> groups = new HashMap<String, Group>();
-
-    protected final Set<User> temporaryUsers = new HashSet<User>();
-    protected final Set<Group> defaultGroups = new HashSet<Group>();
+    final Map<String, User> users = new HashMap<String, User>();
+    final Map<String, Group> groups = new HashMap<String, Group>();
+    final Map<String, Group> defaultGroups = new HashMap<String, Group>();
 
     public AccountManager(final Plugin plugin) {
         this.plugin = plugin;
         if (plugin instanceof Main) AccountManager.main = (Main) plugin;
     }
 
-    public Plugin getPlugin() {
-        return this.plugin;
-    }
+    public void load(final MemoryConfiguration usersConfig, final MemoryConfiguration groupsConfig) {
+        for (final String name : usersConfig.getKeys(false)) {
+            final User user = new User(this, usersConfig.getConfigurationSection(name));
+            this.users.put(user.getName().toLowerCase(), user);
+        }
 
-    public void enable() {
-        for (final Player player : this.plugin.getServer().getOnlinePlayers()) {
-            User user = this.getUser(player.getName());
-            if (user == null) {
-                user = this.createUser(player.getName());
-            }
-            user.attach(player);
-            user.update();
+        for (final String name : groupsConfig.getKeys(false)) {
+            final Group group = new Group(this, groupsConfig.getConfigurationSection(name));
+            this.groups.put(group.getName().toLowerCase(), group);
+            if (group.isDefault()) this.defaultGroups.put(group.getName().toLowerCase(), group);
         }
 
         this.plugin.getServer().getPluginManager().registerEvents(this, this.plugin);
     }
 
-    public void disable() {
+    public void unload() {
+        for (final User user : this.users.values()) user.detach();
+        this.users.clear();
+
+        this.groups.clear();
+
         HandlerList.unregisterAll(this);
-
-        for (final Player player : this.plugin.getServer().getOnlinePlayers()) {
-            final User user = this.getUser(player.getName());
-            user.detach();
-            if (user.isTemporary()) user.delete();
-        }
     }
 
-    public void save() {
-        ((Main) AccountManager.get().plugin).save(AccountManager.get().plugin.getConfig());
+    public ConfigurationSection export() {
+        final MemoryConfiguration exported = new MemoryConfiguration();
+        exported.options().pathSeparator('|');
+
+        final ConfigurationSection usersConfig = exported.createSection("users");
+        for (final User user : this.users.values())
+            if (!user.temporary) usersConfig.createSection(user.getName(), user.config.getValues(true));
+
+        final ConfigurationSection groupsConfig = exported.createSection("groups");
+        for (final Group group : this.groups.values())
+            groupsConfig.createSection(group.getName(), group.config.getValues(true));
+
+        return exported;
     }
 
-    public User getUser(final String name) {
-        return this.users.get(name.toLowerCase());
+    public Map<String, Boolean> defaultPermissions(final String world) {
+        if (this.defaultGroups.isEmpty()) return Collections.emptyMap();
+
+        final Map<String, Boolean> defaults = new LinkedHashMap<String, Boolean>();
+        for (final Group group : this.defaultGroups.values())
+            defaults.putAll(group.permissionsTotal(world));
+
+        // Groups themselves override their children
+        for (final Group group : this.defaultGroups.values())
+            defaults.put(group.getName(), true);
+
+        return defaults;
     }
 
-    public User getUser(final Player player) {
-        return this.getUser(player.getName());
-    }
-
-    public User createUser(final String name) {
-        User user = this.users.get(name.toLowerCase());
-        if (user != null) return user;
-
-        user = new User(this, name);
-        this.users.put(name.toLowerCase(), user);
-        return user;
-    }
-
-    public User createUser(final Player player) {
-        return this.createUser(player.getName());
+    public Principal getPrincipal(final String name) {
+        final String lookup = name.toLowerCase();
+        Principal principal = this.groups.get(lookup);
+        if (principal == null) principal = this.users.get(lookup);
+        return principal;
     }
 
     public Group getGroup(final String name) {
         return this.groups.get(name.toLowerCase());
     }
 
+    public User getUser(final String name) {
+        return this.users.get(name.toLowerCase());
+    }
+
+    public User createUser(final String name) {
+        User user = this.getUser(name);
+        if (user != null) return user;
+
+
+        final MemoryConfiguration config = new MemoryConfiguration();
+        config.options().pathSeparator('|');
+        user = new User(this, config.createSection(name));
+        this.users.put(user.getName().toLowerCase(), user);
+        return user;
+    }
+
     public Group createGroup(final String name) {
-        Group group = this.groups.get(name.toLowerCase());
+        Group group = this.getGroup(name);
         if (group != null) return group;
 
-        group = new Group(this, name);
-        this.groups.put(name.toLowerCase(), group);
+        final MemoryConfiguration config = new MemoryConfiguration();
+        config.options().pathSeparator('|');
+        group = new Group(this, config.createSection(name));
+        this.groups.put(group.getName().toLowerCase(), group);
         return group;
-    }
-
-    public Set<Group> getDefaultGroups() {
-        return Collections.unmodifiableSet(this.defaultGroups);
-    }
-
-    /**
-     * Retrieve account for player or group.
-     *
-     * @param name formatted name of account
-     * @return user or group account
-     */
-    public Principal getAccount(final String name) {
-        if (this.isFormattedGroupName(name))
-            return this.createGroup(this.extractName(name));
-
-        return this.createUser(name);
-    }
-
-    public String formatName(final Principal principal) {
-        if (principal instanceof User)
-            return principal.getName();
-
-        if (principal instanceof Group)
-            return String.format("[%s]", principal.getName());
-
-        return null;
-    }
-
-    public String extractName(final String name) {
-        if (!this.isFormattedGroupName(name)) return name;
-
-        return name.substring(1, name.length() - 1);
-    }
-
-    public boolean isFormattedGroupName(final String name) {
-        if (name == null) return false;
-
-        return name.startsWith("[") && name.endsWith("]");
-    }
-
-    public boolean memberOf(final String member, final String group) {
-        return this.getAccount(member).configuredAs(this.getAccount(group));
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerLogin(final PlayerLoginEvent login) {
-        final User user = this.createUser(login.getPlayer().getName());
-        user.attach(login.getPlayer());
-        user.update();
+        User user = this.getUser(login.getPlayer().getName());
+        if (user == null) {
+            user = this.createUser(login.getPlayer().getName());
+            user.temporary = true;
+        }
+
+        user.update(login.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerWorldChange(final PlayerChangedWorldEvent changed) {
-        this.getUser(changed.getPlayer().getName())
-            .update();
+        final User user = this.getUser(changed.getPlayer().getName());
+        if (user == null) return;
+
+        user.update();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(final PlayerQuitEvent quit) {
         final User user = this.getUser(quit.getPlayer().getName());
+        if (user == null) return;
+
         user.detach();
-        if (user.isTemporary()) user.delete();
     }
 
 }

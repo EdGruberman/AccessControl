@@ -1,172 +1,140 @@
 package edgruberman.bukkit.accesscontrol;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-public abstract class Principal {
+import org.bukkit.configuration.ConfigurationSection;
+
+public class Principal {
 
     final AccountManager manager;
-    final String name;
-    final Map<String, Map<String, Boolean>> permissions = new HashMap<String, Map<String, Boolean>>();
-    final Set<Group> memberships = new HashSet<Group>();
+    final ConfigurationSection config;
 
-    Principal(final AccountManager manager, final String name) {
+    Principal(final AccountManager manager, final ConfigurationSection config) {
         this.manager = manager;
-        this.name = name;
+        this.config = config;
     }
-
-    public abstract boolean delete();
 
     public String getName() {
-        return this.name;
+        return this.config.getName();
     }
 
-    public boolean addPermission(final String name, final Boolean value) {
-        return this.addPermission(name, value, null);
+    /**
+     * Server Direct Permissions
+     */
+    public Map<String, Boolean> permissionsServer() {
+        final ConfigurationSection server = this.config.getConfigurationSection("server");
+        if (server == null) return Collections.emptyMap();
+
+        final Map<String, Boolean> permissions = new LinkedHashMap<String, Boolean>();
+        for (final String key : server.getKeys(false))
+            permissions.put(key.toLowerCase(), server.getBoolean(key));
+
+        return permissions;
     }
 
-    public boolean addPermission(String name, final Boolean value, String world) {
-        if (world != null) world = world.toLowerCase();
-        if (!this.permissions.containsKey(world)) this.permissions.put(world, new HashMap<String, Boolean>());
+    /**
+     * World Direct Permissions
+     */
+    public Map<String, Boolean> permissionsWorld(final String world) {
+        final ConfigurationSection worlds = this.config.getConfigurationSection("worlds");
+        if (worlds == null) return Collections.emptyMap();
 
-        name = name.toLowerCase();
-        final Map<String, Boolean> permissions = this.permissions.get(world);
-        if (permissions.containsKey(name)) {
-            final Boolean existing = permissions.get(name);
-            if (existing == null) {
-                if (value == null) return false;
-            } else {
-                if (existing.equals(value)) return false;
-            }
+        final ConfigurationSection worldConfig = worlds.getConfigurationSection(world);
+        if (worldConfig == null) return Collections.emptyMap();
+
+        final Map<String, Boolean> permissions = new LinkedHashMap<String, Boolean>();
+        for (final String key : worldConfig.getKeys(false))
+            permissions.put(key.toLowerCase(), worldConfig.getBoolean(key));
+
+        return permissions;
+    }
+
+    /**
+     * Combined (server and world) Direct Permissions
+     */
+    public Map<String, Boolean> permissions(final String world) {
+        final Map<String, Boolean> permissions = new LinkedHashMap<String, Boolean>();
+
+        permissions.putAll(this.permissionsServer());
+        permissions.putAll(this.permissionsWorld(world)); // World overrides Server
+
+        return permissions;
+    }
+
+    /**
+     * Combined (server and world) Total (direct and inherited) Permissions
+     */
+    public Map<String, Boolean> permissionsTotal(final String world) {
+        final Map<String, Boolean> combined = new LinkedHashMap<String, Boolean>();
+
+        // Inherited (Children override Parents)
+        for (final Group group : this.memberships(world))
+            combined.putAll(group.permissionsTotal(world));
+
+        // Direct (overrides Inherited)
+        combined.putAll(this.permissions(world));
+
+        return combined;
+    }
+
+    /**
+     * Combined (server and world) Direct Memberships
+     */
+    public List<Group> memberships(final String world) {
+        final Map<String, Boolean> permissions = this.permissions(world);
+
+        final List<Group> groups = new ArrayList<Group>();
+        for (final Map.Entry<String, Boolean> p : permissions.entrySet()) {
+            if (!p.getValue()) continue;
+
+            final Group group = this.manager.groups.get(p.getKey().toLowerCase());
+            if (group == null) continue;
+
+            groups.add(group);
         }
 
-        permissions.put(name, value);
-        return true;
+        return groups;
     }
 
-    public boolean removePermission(final String name) {
-        return this.removePermission(name, null);
+    public void setPermission(final String permission, final boolean value, final String world) {
+        this.createSection(world).set(permission, value);
     }
 
-    public boolean removePermission(String name, String world) {
-        if (world != null) world = world.toLowerCase();
-        final Map<String, Boolean> permissions = this.permissions.get(world);
-        if (permissions == null) return false;
+    public void unsetPermission(final String permission, final String world) {
+        ConfigurationSection section;
+        if (world == null) {
+            section = this.config.getConfigurationSection("server");
+        } else {
+            final ConfigurationSection worlds = this.config.getConfigurationSection("worlds");
+            if (worlds == null) return;
 
-        name = name.toLowerCase();
-        if (!permissions.containsKey(name)) return false;
+            section = worlds.getConfigurationSection(world);
+        }
+        if (section == null) return;
 
-        permissions.remove(name);
-        return true;
+        section.set(permission, null);
+
+        // TODO if no permissions set for server or any world, delete principal
     }
 
-    public Map<String, Map<String, Boolean>> getPermissions() {
-        return this.permissions;
-    }
-
-    // Direct Server and Direct World permissions (Unset directives included)
-    public Map<String, Boolean> directPermissions(final String world) {
-        final Map<String, Boolean> direct = new HashMap<String, Boolean>();
-
-        final Map<String, Boolean> serverPermissions = this.permissions.get(null);
-        if (serverPermissions != null) direct.putAll(serverPermissions);
-
-        if (world != null) {
-            final Map<String, Boolean> worldPermissions = this.permissions.get(world.toLowerCase());
-            if (worldPermissions != null) direct.putAll(worldPermissions);
+    private ConfigurationSection createSection(final String world) {
+        if (world == null) {
+            ConfigurationSection server = this.config.getConfigurationSection("server");
+            if (server == null) server = this.config.createSection("server");
+            return server;
         }
 
-        return direct;
-    }
+        ConfigurationSection worlds = this.config.getConfigurationSection("worlds");
+        if (worlds == null) worlds = this.config.createSection("worlds");
 
-    // Inherited Server, Inherited World, Direct Server, and Direct World permissions (Unset directives included)
-    public Map<String, Boolean> configuredPermissions(final String world) {
-        final Map<String, Boolean> inherited = new HashMap<String, Boolean>();
+        ConfigurationSection worldConfig = worlds.getConfigurationSection(world);
+        if (worldConfig == null) worldConfig = worlds.createSection(world);
 
-        // Apply permission from root first, then override as we move down inheritance chain
-        for (final Group group : this.configuredMemberships())
-            inherited.putAll(group.configuredPermissions(world));
-
-        inherited.putAll(this.directPermissions(world));
-        return inherited;
-    }
-
-    public boolean addMembership(final Group group) {
-        if (!this.memberships.add(group)) return false;
-
-        group.addMember(this);
-        return true;
-    }
-
-    public boolean addMemberships(final Set<Group> groups) {
-        boolean changed = false;
-        for (final Group group : groups)
-            if (this.addMembership(group))
-                changed = true;
-
-        if (!changed) return false;
-
-        return true;
-    }
-
-    public boolean removeMembership(final Group group) {
-        if (!this.memberships.remove(group)) return false;
-
-        group.removeMember(this);
-        return true;
-    }
-
-    public boolean removeMemberships(final Set<Group> groups) {
-        boolean changed = false;
-        for (final Group group : groups)
-            if (this.removeMembership(group))
-                changed = true;
-
-        if (!changed) return false;
-
-        return true;
-    }
-
-    public Set<Group> getMemberships() {
-        return this.memberships;
-    }
-
-    public Set<Group> configuredMemberships() {
-        final Set<Group> inherited = new LinkedHashSet<Group>();
-
-        for (final Group group : this.memberships)
-            inherited.addAll(group.configuredMemberships());
-
-        inherited.addAll(this.memberships);
-        return inherited;
-    }
-
-    public boolean configuredAs(final Principal other) {
-        if (this.equals(other)) return true;
-
-        if (this.configuredMemberships().contains(other)) return true;
-
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return this.name.hashCode();
-    }
-
-    @Override
-    public boolean equals(final Object other) {
-        if (this == other) return true;
-        if (other == null) return false;
-        if (this.getClass() != other.getClass()) return false;
-        final Principal that = (Principal) other;
-        if (this.name == null) {
-            if (that.name != null) return false;
-        } else if (!this.name.equals(that.name)) return false;
-        return true;
+        return worldConfig;
     }
 
 }
