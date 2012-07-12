@@ -5,9 +5,9 @@ author: @AUTHOR@
 main: @MAIN@
 commands:
     'accesscontrol:check':
-        description: Get current effective value of a specific permission
+        description: Get current effective or total (with world) value of a specific permission
         permission: accesscontrol.check
-        usage: /<command> <Permission>[ <Player>]
+        usage: /<command> <Permission>[ (<Player>|<Principal> <World>)]
     'accesscontrol:set':
         description: Add direct permission entry
         permission: accesscontrol.set

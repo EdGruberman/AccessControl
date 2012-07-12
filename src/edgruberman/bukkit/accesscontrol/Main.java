@@ -24,7 +24,7 @@ public final class Main extends JavaPlugin {
         this.setLoggingLevel(this.getConfig().getString("logLevel", "INFO"));
         this.start(this, this.loadConfig("users.yml"), this.loadConfig("groups.yml"));
 
-        new Check(this, "accesscontrol:check");
+        new Check(this, "accesscontrol:check", this.manager);
         new Set(this, "accesscontrol:set", this.manager);
         new Unset(this, "accesscontrol:unset", this.manager);
         new Reload(this, "accesscontrol:reload", this.manager);
