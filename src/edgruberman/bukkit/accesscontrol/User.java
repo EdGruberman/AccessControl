@@ -16,6 +16,18 @@ public class User extends Principal {
     }
 
     @Override
+    public void setPermission(final String permission, final boolean value, final String world) {
+        this.temporary = false;
+        super.setPermission(permission, value, world);
+    }
+
+    @Override
+    public void unsetPermission(final String permission, final String world) {
+        super.unsetPermission(permission, world);
+        if (this.config.getKeys(false).size() == 0) this.temporary = true;
+    }
+
+    @Override
     public void update() {
         this.update(this.manager.plugin.getServer().getPlayerExact(this.getName()));
     }

@@ -77,14 +77,14 @@ public class Check implements CommandExecutor {
         Boolean value = principal.permissions(world).get(permission);
         if (value != null) {
             nature = ChatColor.BLUE + "directly configures";
-            valueText = value ? ChatColor.GREEN + "true" : ChatColor.RED + "false";
+            valueText = value ? ChatColor.GREEN + " true" : ChatColor.RED + " false";
             if (principal instanceof User && ((User) principal).temporary)
                 temporary = ChatColor.GRAY + " temporarily";
         } else {
             value = principal.permissionsTotal(world).get(permission);
             if (value != null) {
                 nature = ChatColor.LIGHT_PURPLE + "implicitly configures";
-                valueText = value ? ChatColor.GREEN + "true" : ChatColor.RED + "false";
+                valueText = value ? ChatColor.GREEN + " true" : ChatColor.RED + " false";
                 if (principal instanceof User && ((User) principal).temporary)
                     temporary = ChatColor.GRAY + " temporarily";
             } else {

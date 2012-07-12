@@ -56,13 +56,13 @@ public class Unset implements CommandExecutor {
         if (world == null) {
             final Boolean existing = principal.permissionsServer().get(permission);
             if (existing == null) {
-                sender.sendMessage(ChatColor.YELLOW + principal.getName() + " does not set " + permission + " in server");
+                sender.sendMessage(ChatColor.YELLOW + principal.getName() + " does not directly set " + permission + " in server");
                 return true;
             }
         } else {
             final Boolean existing = principal.permissionsWorld(world).get(permission);
             if (existing == null) {
-                sender.sendMessage(ChatColor.YELLOW + principal.getName() + " does not set " + permission + " in " + world);
+                sender.sendMessage(ChatColor.YELLOW + principal.getName() + " does not directly set " + permission + " in " + world);
                 return true;
             }
         }
@@ -70,7 +70,7 @@ public class Unset implements CommandExecutor {
         principal.unsetPermission(permission, world);
         principal.update();
         ((Main) this.plugin).save();
-        sender.sendMessage(principal.getName() + " no longer sets " + permission + " in " + (world == null ? "server" : world));
+        sender.sendMessage(principal.getName() + " no longer directly sets " + permission + " in " + (world == null ? "server" : world));
         return true;
     }
 

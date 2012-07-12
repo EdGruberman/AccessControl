@@ -46,14 +46,8 @@ public class Set implements CommandExecutor {
         if (args.length >= 3) {
             principal = this.manager.getPrincipal(args[2]);
             if (principal == null) {
-                if (!args[args.length - 1].startsWith("+")) {
-                    sender.sendMessage(ChatColor.RED + "Unable to find principal: " + args[2]);
-                    return true;
-                }
-
                 if (args[args.length - 1].equalsIgnoreCase("+user")) {
                     principal = this.manager.createUser(args[2]);
-
 
                 } else if (args[args.length - 1].equalsIgnoreCase("+group")) {
                     principal = this.manager.createGroup(args[2]);

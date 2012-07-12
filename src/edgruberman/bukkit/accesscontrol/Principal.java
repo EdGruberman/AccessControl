@@ -108,10 +108,11 @@ public abstract class Principal {
 
     public void unsetPermission(final String permission, final String world) {
         ConfigurationSection section;
+        ConfigurationSection worlds = null;
         if (world == null) {
             section = this.config.getConfigurationSection("server");
         } else {
-            final ConfigurationSection worlds = this.config.getConfigurationSection("worlds");
+            worlds = this.config.getConfigurationSection("worlds");
             if (worlds == null) return;
 
             section = worlds.getConfigurationSection(world);
@@ -120,7 +121,9 @@ public abstract class Principal {
 
         section.set(permission, null);
 
-        // TODO if no permissions set for server or any world, delete principal
+        // Delete section if no values left
+        if (section.getKeys(false).size() == 0) section.getParent().set(section.getName(), null);
+        if (worlds != null && worlds.getKeys(false).size() == 0) worlds.getParent().set(worlds.getName(), null);
     }
 
     private ConfigurationSection createSection(final String world) {
