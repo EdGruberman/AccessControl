@@ -1,2 +1,22 @@
 logLevel: INFO
 setPlayerName: true
+messages:
+    requiresArgument: '-> Required §cargument missing§r: %2$s' # 2 = Argument
+    principalNotFound: '-> Principal §cnot found§r: %2$s' # 2 = <Principal>
+    playerNotFound: '-> Player §cnot found§r: %2$s' # 2 = <Player>
+    notSet: '-> %2$s does §enot directly set§r %3$s in %4$s"' # 2 = Principal, 3 = Permission, 4 = World
+    unset: '-> %2$s §eno longer directly sets§r %3$s in %4$s' # 2 = Principal, 3 = Permission, 4 = World
+    alreadySet: '-> %2$s §ealready directly sets§r %3$s %4$s in %5$s"' # 2 = Principal, 3 = Permission, 4 = Value, 5 = World
+    set: '-> %2$s §2now directly sets§r %3$s %4$s in %5$s' # 2 = Principal, 3 = Permission, 4 = Value, 5 = World
+    reload: '-> AccessControl plugin §2reloaded'
+    check:
+        format: '-> %2$s@%3$s %4$s %5$s %6$s%7$s' # 2 = Player, 3 = World, 4 = Nature, 5 = Permission, 6 = Value, 7 = Temporary
+        +set: '§9effectively sets§r'
+        +default: '§deffectively defaults§r'
+        +notConfigured: '§8does not configure§r'
+        +direct: '§9directly configures§r'
+        +inherit: '§dimplicitly configures§r'
+        +true: '§atrue§r'
+        +false: '§cfalse§r'
+        +temporary: '§7temporarily§r'
+version: @VERSION@

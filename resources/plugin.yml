@@ -5,19 +5,22 @@ author: @AUTHOR@
 main: @MAIN@
 commands:
     'accesscontrol:check':
+        aliases: ['p?', p, check]
         description: Get current effective or total (with world) value of a specific permission
         permission: accesscontrol.check
         usage: /<command> <Permission>[ (<Player>|<Principal> <World>)]
     'accesscontrol:set':
+        aliases: [p+, set]
         description: Add direct permission entry
         permission: accesscontrol.set
         usage: /<command> <Permission> (true|false)[ <Principal>[ <World>]][ (+user|+group)]
     'accesscontrol:unset':
+        aliases: [p-, unset]
         description: Remove direct permission entry
         permission: accesscontrol.unset
         usage: /<command> <Permission>[ <Principal>[ <World>]]
     'accesscontrol:reload':
-        description: Reload configuration files
+        description: Reload AccessControl plugin
         permission: accesscontrol.reload
 permissions:
     accesscontrol.all:

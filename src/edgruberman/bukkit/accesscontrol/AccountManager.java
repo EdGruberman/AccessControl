@@ -27,9 +27,7 @@ public class AccountManager implements Listener {
      * @return main AccountManager; null if plugin is disabled
      */
     public static AccountManager get() {
-        if (AccountManager.main == null) return null;
-
-        return AccountManager.main.getAccountManager();
+        return AccountManager.main.manager;
     }
 
     final Plugin plugin;
@@ -74,9 +72,7 @@ public class AccountManager implements Listener {
     public void unload() {
         for (final User user : this.users.values()) user.detach();
         this.users.clear();
-
         this.groups.clear();
-
         HandlerList.unregisterAll(this);
     }
 
