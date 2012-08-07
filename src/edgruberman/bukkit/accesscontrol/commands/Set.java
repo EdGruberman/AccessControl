@@ -87,7 +87,7 @@ public class Set implements CommandExecutor {
         principal.setPermission(permission, value, world);
         principal.update();
         ((Main) this.plugin).save();
-        Main.messenger.tell(sender, "unset", principal.getName(), permission, value, (world == null ? "server" : world));
+        Main.messenger.tell(sender, "set", principal.getName(), permission, value, (world == null ? "server" : world));
         return true;
     }
 
