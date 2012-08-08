@@ -36,7 +36,7 @@ public final class Main extends JavaPlugin {
         this.reloadConfig();
         Main.messenger = Messenger.load(this, "messages");
 
-        this.manager = new AccountManager(this);
+        this.manager = new AccountManager(this, this.getConfig().getBoolean("setPlayerName"));
         this.manager.load(this.loadConfig("users.yml"), this.loadConfig("groups.yml"));
         this.getLogger().config("Loaded " + this.manager.groups.size() + " groups and "+ this.manager.users.size() + " users");
 

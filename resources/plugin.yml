@@ -1,5 +1,6 @@
 name: @NAME@
 description: Native Bukkit permission management
+softdepend: [TimeService]
 version: @VERSION@
 author: @AUTHOR@
 main: @MAIN@

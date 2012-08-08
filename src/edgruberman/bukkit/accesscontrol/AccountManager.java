@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
@@ -31,13 +32,15 @@ public class AccountManager implements Listener {
     }
 
     final Plugin plugin;
+    final boolean setPlayerName;
 
     final Map<String, User> users = new HashMap<String, User>();
     final Map<String, Group> groups = new HashMap<String, Group>();
     final Map<String, Group> defaultGroups = new HashMap<String, Group>();
 
-    public AccountManager(final Plugin plugin) {
+    public AccountManager(final Plugin plugin, final boolean setPlayerName) {
         this.plugin = plugin;
+        this.setPlayerName = setPlayerName;
         if (plugin instanceof Main) AccountManager.main = (Main) plugin;
     }
 
@@ -164,6 +167,10 @@ public class AccountManager implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(final PlayerQuitEvent quit) {
+        for (final Player player : Bukkit.getOnlinePlayers())
+            if (player.getName().equals(quit.getPlayer().getName()))
+                return; // Ghost account quitting, leave existing user in place and alone
+
         final User user = this.getUser(quit.getPlayer().getName());
         if (user == null) return;
 

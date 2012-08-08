@@ -43,7 +43,7 @@ public class User extends Principal {
         for (final Map.Entry<String, Boolean> p : permissions.entrySet())
             this.attachment.setPermission(p.getKey(), p.getValue());
 
-        this.attachment.setPermission(player.getName(), true);
+        if (this.manager.setPlayerName) this.attachment.setPermission(player.getName(), true);
     }
 
     public void detach() {
