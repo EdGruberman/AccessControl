@@ -22,19 +22,21 @@ import edgruberman.bukkit.accesscontrol.commands.Check;
 import edgruberman.bukkit.accesscontrol.commands.Reload;
 import edgruberman.bukkit.accesscontrol.commands.Set;
 import edgruberman.bukkit.accesscontrol.commands.Unset;
+import edgruberman.bukkit.messaging.couriers.ConfigurationCourier;
+import edgruberman.bukkit.messaging.couriers.TimestampedConfigurationCourier;
 
 public final class Main extends JavaPlugin {
 
     private static final Version MINIMUM_CONFIGURATION = new Version("5.0.0");
 
-    public static Messenger messenger;
+    public static ConfigurationCourier courier;
 
     public AccountManager manager = null;
 
     @Override
     public void onEnable() {
         this.reloadConfig();
-        Main.messenger = Messenger.load(this, "messages");
+        Main.courier = new TimestampedConfigurationCourier(this, "messages");
 
         this.manager = new AccountManager(this, this.getConfig().getBoolean("setPlayerName"));
         this.manager.load(this.loadConfig("users.yml"), this.loadConfig("groups.yml"));

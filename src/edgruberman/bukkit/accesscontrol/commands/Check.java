@@ -26,12 +26,12 @@ public class Check implements CommandExecutor {
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
         if (args.length == 0) {
-            Main.messenger.tell(sender, "requiresArgument", "<Permission>");
+            Main.courier.send(sender, "requiresArgument", "<Permission>");
             return false;
         }
 
         if (sender instanceof ConsoleCommandSender && args.length < 2) {
-            Main.messenger.tell(sender, "requiresArgument", "(<Player>|<Principal> <World>)");
+            Main.courier.send(sender, "requiresArgument", "(<Player>|<Principal> <World>)");
             return false;
         }
 
@@ -42,15 +42,15 @@ public class Check implements CommandExecutor {
 
             final Player player = this.plugin.getServer().getPlayerExact(target);
             if (player == null) {
-                Main.messenger.tell(sender, "playerNotFound", target);
+                Main.courier.send(sender, "playerNotFound", target);
                 return true;
             }
 
             final String permission = args[0];
-            final String nature = Main.messenger.getFormat(player.isPermissionSet(permission) ? "check.+set" : "check.+default");
-            final String value = Main.messenger.getFormat(player.hasPermission(permission) ? "check.+true" : "check.+false");
-            final String temporary = (this.manager.getUser(target).temporary ? Main.messenger.getFormat("check.+temporary") : "");
-            Main.messenger.tell(sender, "check.format", player.getName(), player.getWorld().getName(), nature, permission, value, temporary);
+            final String nature = Main.courier.format(player.isPermissionSet(permission) ? "check.+set" : "check.+default");
+            final String value = Main.courier.format(player.hasPermission(permission) ? "check.+true" : "check.+false");
+            final String temporary = (this.manager.getUser(target).temporary ? Main.courier.format("check.+temporary") : "");
+            Main.courier.send(sender, "check.format", player.getName(), player.getWorld().getName(), nature, permission, value, temporary);
             return true;
         }
 
@@ -59,10 +59,10 @@ public class Check implements CommandExecutor {
         final String permission = args[0];
         final Principal principal = this.manager.getPrincipal(args[1]);
         final String world = args[2];
-        String nature = Main.messenger.getFormat("check.+notConfigured");
+        String nature = Main.courier.format("check.+notConfigured");
 
         if (principal == null) {
-            Main.messenger.tell(sender, "check.format", args[1], world, nature, permission);
+            Main.courier.send(sender, "check.format", args[1], world, nature, permission);
             return true;
         }
 
@@ -70,21 +70,21 @@ public class Check implements CommandExecutor {
         String valueText = "";
         Boolean value = principal.permissions(world).get(permission);
         if (value != null) {
-            nature = Main.messenger.getFormat("check.+direct");
-            valueText = Main.messenger.getFormat(value ? "check.+true" : "check.+false");
-            if (principal instanceof User && ((User) principal).temporary) temporary = Main.messenger.getFormat("check.+temporary");
+            nature = Main.courier.format("check.+direct");
+            valueText = Main.courier.format(value ? "check.+true" : "check.+false");
+            if (principal instanceof User && ((User) principal).temporary) temporary = Main.courier.format("check.+temporary");
         } else {
             value = principal.permissionsTotal(world).get(permission);
             if (value != null) {
-                nature = Main.messenger.getFormat("check.+inherit");
-                valueText = Main.messenger.getFormat(value ? "check.+true" : "check.+false");
-                if (principal instanceof User && ((User) principal).temporary) temporary = Main.messenger.getFormat("check.+temporary");
+                nature = Main.courier.format("check.+inherit");
+                valueText = Main.courier.format(value ? "check.+true" : "check.+false");
+                if (principal instanceof User && ((User) principal).temporary) temporary = Main.courier.format("check.+temporary");
             } else {
                 // TODO check for offline player to determine is op, then identify default permission value
             }
         }
 
-        Main.messenger.tell(sender, "check.format", principal.getName(), world, nature, permission, valueText, temporary);
+        Main.courier.send(sender, "check.format", principal.getName(), world, nature, permission, valueText, temporary);
         return true;
     }
 

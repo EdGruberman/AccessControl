@@ -24,12 +24,12 @@ public class Unset implements CommandExecutor {
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
         if (args.length == 0) {
-            Main.messenger.tell(sender, "requiresArgument", "<Permission>");
+            Main.courier.send(sender, "requiresArgument", "<Permission>");
             return false;
         }
 
         if (sender instanceof ConsoleCommandSender && args.length < 2) {
-            Main.messenger.tell(sender, "requiresArgument", "<Principal>");
+            Main.courier.send(sender, "requiresArgument", "<Principal>");
             return false;
         }
 
@@ -39,7 +39,7 @@ public class Unset implements CommandExecutor {
         if (args.length >= 2) {
             principal = this.manager.getPrincipal(args[1]);
             if (principal == null) {
-                Main.messenger.tell(sender, "principalNotFound", args[1]);
+                Main.courier.send(sender, "principalNotFound", args[1]);
                 return true;
             }
         } else {
@@ -52,13 +52,13 @@ public class Unset implements CommandExecutor {
         if (world == null) {
             final Boolean existing = principal.permissionsServer().get(permission);
             if (existing == null) {
-                Main.messenger.tell(sender, "notSet", principal.getName(), permission, "server");
+                Main.courier.send(sender, "notSet", principal.getName(), permission, "server");
                 return true;
             }
         } else {
             final Boolean existing = principal.permissionsWorld(world).get(permission);
             if (existing == null) {
-                Main.messenger.tell(sender, "notSet", principal.getName(), permission, world);
+                Main.courier.send(sender, "notSet", principal.getName(), permission, world);
                 return true;
             }
         }
@@ -66,7 +66,7 @@ public class Unset implements CommandExecutor {
         principal.unsetPermission(permission, world);
         principal.update();
         ((Main) this.plugin).save();
-        Main.messenger.tell(sender, "unset", principal.getName(), permission, (world == null ? "server" : world));
+        Main.courier.send(sender, "unset", principal.getName(), permission, (world == null ? "server" : world));
         return true;
     }
 

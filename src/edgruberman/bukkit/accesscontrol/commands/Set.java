@@ -26,17 +26,17 @@ public class Set implements CommandExecutor {
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, String[] args) {
         if (args.length == 0) {
-            Main.messenger.tell(sender, "requiresArgument", "<Permission>");
+            Main.courier.send(sender, "requiresArgument", "<Permission>");
             return false;
         }
 
         if (sender instanceof ConsoleCommandSender && args.length == 1) {
-            Main.messenger.tell(sender, "requiresArgument", "(true|false)");
+            Main.courier.send(sender, "requiresArgument", "(true|false)");
             return false;
         }
 
         if (sender instanceof ConsoleCommandSender && args.length == 2) {
-            Main.messenger.tell(sender, "requiresArgument", "<Principal>");
+            Main.courier.send(sender, "requiresArgument", "<Principal>");
             return false;
         }
 
@@ -54,7 +54,7 @@ public class Set implements CommandExecutor {
                     principal = this.manager.createGroup(args[2]);
 
                 } else {
-                    Main.messenger.tell(sender, "principalNotFound", args[2]);
+                    Main.courier.send(sender, "principalNotFound", args[2]);
                     return true;
                 }
             }
@@ -73,13 +73,13 @@ public class Set implements CommandExecutor {
         if (world == null) {
             final Boolean existing = principal.permissionsServer().get(permission);
             if (existing != null && existing == value) {
-                Main.messenger.tell(sender, "alreadySet", principal.getName(), permission, value, "server");
+                Main.courier.send(sender, "alreadySet", principal.getName(), permission, value, "server");
                 return true;
             }
         } else {
             final Boolean existing = principal.permissionsWorld(world).get(permission);
             if (existing != null && existing == value) {
-                Main.messenger.tell(sender, "alreadySet", principal.getName(), permission, value, world);
+                Main.courier.send(sender, "alreadySet", principal.getName(), permission, value, world);
                 return true;
             }
         }
@@ -87,7 +87,7 @@ public class Set implements CommandExecutor {
         principal.setPermission(permission, value, world);
         principal.update();
         ((Main) this.plugin).save();
-        Main.messenger.tell(sender, "set", principal.getName(), permission, value, (world == null ? "server" : world));
+        Main.courier.send(sender, "set", principal.getName(), permission, value, (world == null ? "server" : world));
         return true;
     }
 
