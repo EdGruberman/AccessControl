@@ -1,4 +1,4 @@
-package edgruberman.bukkit.messaging;
+package edgruberman.bukkit.accesscontrol.messaging;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;

@@ -22,8 +22,8 @@ import edgruberman.bukkit.accesscontrol.commands.Check;
 import edgruberman.bukkit.accesscontrol.commands.Reload;
 import edgruberman.bukkit.accesscontrol.commands.Set;
 import edgruberman.bukkit.accesscontrol.commands.Unset;
-import edgruberman.bukkit.messaging.couriers.ConfigurationCourier;
-import edgruberman.bukkit.messaging.couriers.TimestampedConfigurationCourier;
+import edgruberman.bukkit.accesscontrol.messaging.couriers.ConfigurationCourier;
+import edgruberman.bukkit.accesscontrol.messaging.couriers.TimestampedConfigurationCourier;
 
 public final class Main extends JavaPlugin {
 
