@@ -1,16 +1,16 @@
 logLevel: INFO
 setPlayerName: true
 messages:
-    requiresArgument: '-> Required §cargument missing§r: %2$s' # 2 = Argument
-    principalNotFound: '-> Principal §cnot found§r: %2$s' # 2 = <Principal>
-    playerNotFound: '-> Player §cnot found§r: %2$s' # 2 = <Player>
-    notSet: '-> %2$s does §enot directly set§r %3$s in %4$s' # 2 = Principal, 3 = Permission, 4 = World
-    unset: '-> %2$s §eno longer directly sets§r %3$s in %4$s' # 2 = Principal, 3 = Permission, 4 = World
-    alreadySet: '-> %2$s §ealready directly sets§r %3$s %4$s in %5$s' # 2 = Principal, 3 = Permission, 4 = Value, 5 = World
-    set: '-> %2$s §2now directly sets§r %3$s %4$s in %5$s' # 2 = Principal, 3 = Permission, 4 = Value, 5 = World
-    reload: '-> AccessControl plugin §2reloaded'
+    requiresArgument: '-> Required §cargument missing§r: {1}' # 1 = Argument
+    principalNotFound: '-> Principal §cnot found§r: {1}' # 1 = <Principal>
+    playerNotFound: '-> Player §cnot found§r: {1}' # 1 = <Player>
+    notSet: '-> {1} does §enot directly set§r {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
+    unset: '-> {1} §eno longer directly sets§r {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
+    alreadySet: '-> {1} §ealready directly sets§r {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
+    set: '-> {1} §2now directly sets§r {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
+    reload: '-> {1} plugin §2reloaded' # 1 = Plugin Name
     check:
-        format: '-> %2$s@%3$s %4$s %5$s %6$s%7$s' # 2 = Player, 3 = World, 4 = Nature, 5 = Permission, 6 = Value, 7 = Temporary
+        format: '-> {1}@{2} {3} {4} {5}{6}' # 1 = Player, 2 = World, 3 = Nature, 4 = Permission, 5 = Value, 6 = Temporary
         +set: '§9effectively sets§r'
         +default: '§deffectively defaults§r'
         +notConfigured: '§8does not configure§r'
