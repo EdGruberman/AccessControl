@@ -22,21 +22,21 @@ import edgruberman.bukkit.accesscontrol.commands.Check;
 import edgruberman.bukkit.accesscontrol.commands.Reload;
 import edgruberman.bukkit.accesscontrol.commands.Set;
 import edgruberman.bukkit.accesscontrol.commands.Unset;
-import edgruberman.bukkit.accesscontrol.messaging.couriers.ConfigurationCourier;
-import edgruberman.bukkit.accesscontrol.messaging.couriers.TimestampedConfigurationCourier;
+import edgruberman.bukkit.accesscontrol.messaging.ConfigurationCourier;
+import edgruberman.bukkit.accesscontrol.messaging.Courier;
 
 public final class Main extends JavaPlugin {
 
     private static final Version MINIMUM_CONFIGURATION = new Version("5.0.0");
 
-    public static ConfigurationCourier courier;
+    public static Courier courier;
 
     public AccountManager manager = null;
 
     @Override
     public void onEnable() {
         this.reloadConfig();
-        Main.courier = new TimestampedConfigurationCourier(this, "messages");
+        Main.courier = ConfigurationCourier.Factory.create(this).setBase("messages").build();
 
         this.manager = new AccountManager(this, this.getConfig().getBoolean("setPlayerName"));
         this.manager.load(this.loadConfig("users.yml"), this.loadConfig("groups.yml"));
