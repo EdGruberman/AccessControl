@@ -1,5 +1,4 @@
-package edgruberman.bukkit.accesscontrol;
-
+package edgruberman.bukkit.accesscontrol.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
