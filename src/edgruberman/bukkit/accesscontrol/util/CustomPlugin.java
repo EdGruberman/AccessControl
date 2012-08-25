@@ -20,6 +20,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * @author EdGruberman (ed@rjump.com)
+ * @version 1.0.1
+ */
 public class CustomPlugin extends JavaPlugin {
 
     public static final Charset CONFIGURATION_SOURCE = Charset.forName("UTF-8");
@@ -95,6 +99,8 @@ public class CustomPlugin extends JavaPlugin {
         final File config = new File(this.getDataFolder(), resource);
         if (config.exists()) return;
 
+        config.getParentFile().mkdirs();
+
         final char[] cbuf = new char[1024]; int read;
         try {
             final Reader in = new BufferedReader(new InputStreamReader(this.getResource(resource), CustomPlugin.CONFIGURATION_SOURCE));
@@ -129,7 +135,8 @@ public class CustomPlugin extends JavaPlugin {
             if (h.getLevel().intValue() > level.intValue()) h.setLevel(level);
 
         this.getLogger().setLevel(level);
-        this.getLogger().config("Log level set to: " + this.getLogger().getLevel());
+        this.getLogger().log(Level.CONFIG, "Log level set to: {0} ({1})"
+                , new Object[] { this.getLogger().getLevel(), this.getLogger().getLevel().intValue() });
     }
 
 }
