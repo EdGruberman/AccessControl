@@ -1,8 +1,9 @@
-name: @NAME@
-description: Native Bukkit permission management
+name: AccessControl
 version: @VERSION@
-author: @AUTHOR@
-main: @MAIN@
+description: Native Bukkit permission management
+author: EdGruberman (ed@rjump.com)
+website: http://github.com/EdGruberman/AccessControl
+main: edgruberman.bukkit.accesscontrol.Main
 commands:
     'accesscontrol:check':
         aliases: ['p?', p, check]

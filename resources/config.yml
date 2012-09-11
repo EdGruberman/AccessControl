@@ -1,22 +1,22 @@
 logLevel: INFO
 setPlayerName: true
 messages:
-    requiresArgument: '-> Required §cargument missing§r: {1}' # 1 = Argument
-    principalNotFound: '-> Principal §cnot found§r: {1}' # 1 = <Principal>
-    playerNotFound: '-> Player §cnot found§r: {1}' # 1 = <Player>
-    notSet: '-> {1} does §enot directly set§r {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
-    unset: '-> {1} §eno longer directly sets§r {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
-    alreadySet: '-> {1} §ealready directly sets§r {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
-    set: '-> {1} §2now directly sets§r {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
-    reload: '-> {1} plugin §2reloaded' # 1 = Plugin Name
+    notSet: '-> §7{1} does §enot directly set§7 {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
+    unset: '-> §7{1} §2no longer directly sets§7 {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
+    alreadySet: '-> §7{1} §ealready directly sets§7 {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
+    set: '-> §7{1} §2now directly sets§7 {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
     check:
-        format: '-> {1}@{2} {3} {4} {5}{6}' # 1 = Player, 2 = World, 3 = Nature, 4 = Permission, 5 = Value, 6 = Temporary
-        +set: '§9effectively sets§r'
-        +default: '§deffectively defaults§r'
-        +notConfigured: '§8does not configure§r'
-        +direct: '§9directly configures§r'
-        +inherit: '§dimplicitly configures§r'
-        +true: '§atrue§r'
-        +false: '§cfalse§r'
-        +temporary: '§7temporarily§r'
+        format: '-> §7{1}@{2} {3} {4} {5}{6}' # 1 = Player, 2 = World, 3 = Nature, 4 = Permission, 5 = Value, 6 = Temporary
+        +set: '§9effectively sets§7'
+        +default: '§deffectively defaults§7'
+        +notConfigured: '§8does not configure§7'
+        +direct: '§9directly configures§7'
+        +inherit: '§dimplicitly configures§7'
+        +true: '§atrue§7'
+        +false: '§cfalse§7'
+        +temporary: '§7temporarily§7'
+    principalNotFound: '-> §7Principal §cnot found§7: §o{1}' # 1 = <Principal>
+    playerNotFound: '-> §7Player §cnot found§7: §o{1}' # 1 = <Player>
+    requiresArgument: '-> §7Required §cargument missing§7: §o{1}' # 1 = Argument Name
+    reload: '-> §7{1} plugin §2reloaded' # 1 = Plugin
 version: @VERSION@
