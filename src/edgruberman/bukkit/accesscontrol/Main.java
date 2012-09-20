@@ -25,7 +25,7 @@ public final class Main extends CustomPlugin {
     @Override
     public void onEnable() {
         this.reloadConfig();
-        Main.courier = ConfigurationCourier.Factory.create(this).setBase("messages").build();
+        Main.courier = ConfigurationCourier.Factory.create(this).setPath("messages").build();
 
         this.manager = new AccountManager(this, this.getConfig().getBoolean("setPlayerName"));
         this.manager.load(this.loadConfig("users.yml", '|', null), this.loadConfig("groups.yml", '|', null));
