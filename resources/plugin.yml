@@ -14,7 +14,7 @@ commands:
         aliases: [p+, set]
         description: Add direct permission entry
         permission: accesscontrol.set
-        usage: /<command> <Permission> (true|false)[ <Principal>[ <World>]][ (+user|+group)]
+        usage: /<command> <Permission> [(true|false)[ <Principal>[ <World>]]][ (+user|+group)]
     'accesscontrol:unset':
         aliases: [p-, unset]
         description: Remove direct permission entry

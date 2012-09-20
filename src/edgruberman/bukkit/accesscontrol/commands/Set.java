@@ -22,7 +22,7 @@ public class Set implements CommandExecutor {
         this.manager = manager;
     }
 
-    // usage: /<command> <Permission> (true|false)[ <Principal>[ <World>]][ (+user|+group)]
+    // usage: /<command> <Permission> [(true|false)[ <Principal>[ <World>]]][ (+user|+group)]
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, String[] args) {
         if (args.length == 0) {
@@ -30,18 +30,13 @@ public class Set implements CommandExecutor {
             return false;
         }
 
-        if (sender instanceof ConsoleCommandSender && args.length == 1) {
-            Main.courier.send(sender, "requiresArgument", "(true|false)");
-            return false;
-        }
-
-        if (sender instanceof ConsoleCommandSender && args.length == 2) {
-            Main.courier.send(sender, "requiresArgument", "<Principal>");
+        if (sender instanceof ConsoleCommandSender && args.length < 3) {
+            Main.courier.send(sender, "requiresArgument", "(true|false) <Principal>");
             return false;
         }
 
         final String permission = args[0];
-        final boolean value = Boolean.valueOf(args[1]);
+        final boolean value = Boolean.valueOf(( args.length >= 2 ? args[1] : "true" ));
 
         Principal principal;
         if (args.length >= 3) {
