@@ -62,6 +62,7 @@ public final class Version implements Comparable<Version> {
     }
 
 
+
     /** Software life-cycle indicator (Alpha -> Beta -> Release Candidate -> Production) */
     public static class Type implements Comparable<Type> {
 
@@ -70,7 +71,7 @@ public final class Version implements Comparable<Version> {
         public static final Type ALPHA = new Type("a", 0);
         public static final Type BETA = new Type("b", 1);
         public static final Type CANDIDATE = new Type("rc", 2);
-        public static final Type PRODUCTION = new Type("", 3);
+        public static final Type RELEASE = new Type("", 3);
 
         public static Type parse(final String designator) {
             for (final Type type : Type.known)
@@ -92,7 +93,6 @@ public final class Version implements Comparable<Version> {
         @Override
         public int compareTo(final Type other) {
             return (other == null ? 1 : this.level.compareTo(other.level));
-
         }
 
     }

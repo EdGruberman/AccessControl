@@ -20,7 +20,7 @@ public final class Main extends CustomPlugin {
     public AccountManager manager = null;
 
     @Override
-    public void onLoad() { this.putConfigMinimum("config.yml", "5.2.4"); }
+    public void onLoad() { this.putConfigMinimum(CustomPlugin.CONFIGURATION_FILE, "5.2.4"); }
 
     @Override
     public void onEnable() {

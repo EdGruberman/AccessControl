@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
@@ -16,20 +17,24 @@ import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 
+import org.bukkit.configuration.Configuration;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * @author EdGruberman (ed@rjump.com)
- * @version 1.0.2
+ * @version 1.2.0
  */
 public class CustomPlugin extends JavaPlugin {
 
+    public static final Charset CONFIGURATION_TARGET = Charset.defaultCharset();
     public static final Charset CONFIGURATION_SOURCE = Charset.forName("UTF-8");
     public static final String CONFIGURATION_ARCHIVE = "{0} - Archive version {1} - {2,date,yyyyMMddHHmmss}.yml"; // 0 = Name, 1 = Version, 2 = Date
     public static final String CONFIGURATION_FILE = "config.yml";
     public static final Level DEFAULT_LOG = Level.INFO;
+    public static final String LINE_SEPARATOR = System.getProperty("line.separator");
 
     /** minimum version required for configuration files; indexed by relative file name (e.g. "config.yml") */
     private final Map<String, Version> configurationMinimums = new HashMap<String, Version>();
@@ -48,15 +53,14 @@ public class CustomPlugin extends JavaPlugin {
     @Override
     public FileConfiguration getConfig() {
         if (this.config == null) this.reloadConfig();
-
         return this.config;
     }
 
     @Override
     public void reloadConfig() {
         this.config = this.loadConfig(CustomPlugin.CONFIGURATION_FILE, this.pathSeparator, this.configurationMinimums.get(CustomPlugin.CONFIGURATION_FILE));
-        super.reloadConfig();
         this.setLogLevel(this.getConfig().getString("logLevel"));
+        this.getLogger().log(Level.FINEST, "YAML configuration file encoding: {0}", CustomPlugin.CONFIGURATION_TARGET);
     }
 
     @Override
@@ -64,10 +68,12 @@ public class CustomPlugin extends JavaPlugin {
         this.extractConfig(CustomPlugin.CONFIGURATION_FILE, false);
     }
 
+    /** @param resource same as in {@link #loadConfig(String, char, Version)} */
     public FileConfiguration loadConfig(final String resource) {
         return this.loadConfig(resource, this.pathSeparator, this.configurationMinimums.get(resource));
     }
 
+    /** @param resource file name relative to plugin data folder and base of jar (embedded file extracted to file system if does not exist) */
     public FileConfiguration loadConfig(final String resource, final char pathSeparator, final Version required) {
         // extract default if not existing
         this.extractConfig(resource, false);
@@ -75,8 +81,14 @@ public class CustomPlugin extends JavaPlugin {
         final File existing = new File(this.getDataFolder(), resource);
         final YamlConfiguration yaml = new YamlConfiguration();
         yaml.options().pathSeparator(pathSeparator);
-        try { yaml.load(existing);
-        } catch (final Exception e) { this.getLogger().severe("Unable to load configuration file: " + existing.getPath() + "; " + e); }
+        try {
+            yaml.load(existing);
+        } catch (final InvalidConfigurationException e) {
+            throw new IllegalStateException("Unable to load configuration file: " + existing.getPath() + " (Ensure file is encoded as " + CustomPlugin.CONFIGURATION_TARGET + ")", e);
+        } catch (final Exception e) {
+            throw new RuntimeException("Unable to load configuration file: " + existing.getPath(), e);
+        }
+        yaml.setDefaults(this.loadEmbeddedConfig(CustomPlugin.CONFIGURATION_FILE));
         if (required == null) return yaml;
 
         // verify required or later version
@@ -89,30 +101,27 @@ public class CustomPlugin extends JavaPlugin {
         return this.loadConfig(resource, this.pathSeparator, null);
     }
 
+    /** extract embedded configuration file from jar, translating character encoding to default character set */
     public void extractConfig(final String resource, final boolean replace) {
-        final Charset target = Charset.defaultCharset();
-        if (target.equals(CustomPlugin.CONFIGURATION_SOURCE)) {
-            super.saveResource(resource, replace);
-            return;
-        }
-
         final File config = new File(this.getDataFolder(), resource);
-        if (config.exists()) return;
+        if (config.exists() && !replace) return;
 
+        this.getLogger().log(Level.FINE, "Extracting configuration file {1} {0} as {2}", new Object[] { resource, CustomPlugin.CONFIGURATION_SOURCE.name(), CustomPlugin.CONFIGURATION_TARGET.name() });
         config.getParentFile().mkdirs();
 
         final char[] cbuf = new char[1024]; int read;
         try {
             final Reader in = new BufferedReader(new InputStreamReader(this.getResource(resource), CustomPlugin.CONFIGURATION_SOURCE));
-            final Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(config), target));
+            final Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(config), CustomPlugin.CONFIGURATION_TARGET));
             while((read = in.read(cbuf)) > 0) out.write(cbuf, 0, read);
             out.close(); in.close();
 
         } catch (final Exception e) {
-            throw new IllegalArgumentException("Could not extract configuration file \"" + resource + "\" to " + config.getPath() + "\";" + e);
+            throw new IllegalArgumentException("Could not extract configuration file \"" + resource + "\" to " + config.getPath() + "\"", e);
         }
     }
 
+    /** make a backup copy of an existing configuration file */
     public void archiveConfig(final String resource, final Version version) {
         final File backup = new File(this.getDataFolder(), MessageFormat.format(CustomPlugin.CONFIGURATION_ARCHIVE, resource.replaceAll("(?i)\\.yml$", ""), version, new Date()));
         final File existing = new File(this.getDataFolder(), resource);
@@ -121,6 +130,32 @@ public class CustomPlugin extends JavaPlugin {
             throw new IllegalStateException("Unable to archive configuration file \"" + existing.getPath() + "\" with version \"" + version + "\" to \"" + backup.getPath() + "\"");
 
         this.getLogger().warning("Archived configuration file \"" + existing.getPath() + "\" with version \"" + version + "\" to \"" + backup.getPath() + "\"");
+    }
+
+    /** load configuration from jar without extracting to file system **/
+    public Configuration loadEmbeddedConfig(final String resource) {
+        final YamlConfiguration config = new YamlConfiguration();
+        final InputStream defaults = this.getResource(resource);
+        if (defaults == null) return config;
+
+        final InputStreamReader reader = new InputStreamReader(defaults, CustomPlugin.CONFIGURATION_SOURCE);
+        final StringBuilder builder = new StringBuilder();
+        final BufferedReader input = new BufferedReader(reader);
+        try {
+            try {
+                String line;
+                while ((line = input.readLine()) != null)
+                    builder.append(line).append(CustomPlugin.LINE_SEPARATOR);
+            } finally {
+                input.close();
+            }
+            config.loadFromString(builder.toString());
+
+        } catch (final Exception e) {
+            throw new RuntimeException("Unable to load embedded configuration: " + resource, e);
+        }
+
+        return config;
     }
 
     public void setLogLevel(final String name) {
