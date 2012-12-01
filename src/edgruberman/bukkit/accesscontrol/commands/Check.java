@@ -26,12 +26,12 @@ public class Check implements CommandExecutor {
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
         if (args.length == 0) {
-            Main.courier.send(sender, "requiresArgument", "<Permission>");
+            Main.courier.send(sender, "requires-argument", "<Permission>");
             return false;
         }
 
         if (sender instanceof ConsoleCommandSender && args.length < 2) {
-            Main.courier.send(sender, "requiresArgument", "(<Player>|<Principal> <World>)");
+            Main.courier.send(sender, "requires-argument", "(<Player>|<Principal> <World>)");
             return false;
         }
 
@@ -42,7 +42,7 @@ public class Check implements CommandExecutor {
 
             final Player player = this.plugin.getServer().getPlayerExact(target);
             if (player == null) {
-                Main.courier.send(sender, "playerNotFound", target);
+                Main.courier.send(sender, "player-not-found", target);
                 return true;
             }
 
@@ -59,7 +59,7 @@ public class Check implements CommandExecutor {
         final String permission = args[0];
         final Principal principal = this.manager.getPrincipal(args[1]);
         final String world = args[2];
-        String nature = Main.courier.format("check.+notConfigured");
+        String nature = Main.courier.format("check.+not-configured");
 
         if (principal == null) {
             Main.courier.send(sender, "check.format", args[1], world, nature, permission);

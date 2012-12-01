@@ -24,12 +24,12 @@ public class Unset implements CommandExecutor {
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
         if (args.length == 0) {
-            Main.courier.send(sender, "requiresArgument", "<Permission>");
+            Main.courier.send(sender, "requires-argument", "<Permission>");
             return false;
         }
 
         if (sender instanceof ConsoleCommandSender && args.length < 2) {
-            Main.courier.send(sender, "requiresArgument", "<Principal>");
+            Main.courier.send(sender, "requires-argument", "<Principal>");
             return false;
         }
 
@@ -39,7 +39,7 @@ public class Unset implements CommandExecutor {
         if (args.length >= 2) {
             principal = this.manager.getPrincipal(args[1]);
             if (principal == null) {
-                Main.courier.send(sender, "principalNotFound", args[1]);
+                Main.courier.send(sender, "principal-not-found", args[1]);
                 return true;
             }
         } else {
@@ -52,13 +52,13 @@ public class Unset implements CommandExecutor {
         if (world == null) {
             final Boolean existing = principal.permissionsServer().get(permission);
             if (existing == null) {
-                Main.courier.send(sender, "notSet", principal.getName(), permission, "server");
+                Main.courier.send(sender, "not-set", principal.getName(), permission, "server");
                 return true;
             }
         } else {
             final Boolean existing = principal.permissionsWorld(world).get(permission);
             if (existing == null) {
-                Main.courier.send(sender, "notSet", principal.getName(), permission, world);
+                Main.courier.send(sender, "not-set", principal.getName(), permission, world);
                 return true;
             }
         }

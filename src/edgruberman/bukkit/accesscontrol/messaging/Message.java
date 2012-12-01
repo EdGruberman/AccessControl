@@ -13,7 +13,7 @@ import org.bukkit.command.CommandSender;
  * {@link java.text.MessageFormat MessageFormat} that sets time zone of each date argument for target
  *
  * @author EdGruberman (ed@rjump.com)
- * @version 2.0.0
+ * @version 2.1.0
  */
 public class Message extends MessageFormat {
 
@@ -57,6 +57,10 @@ public class Message extends MessageFormat {
     }
 
 
+
+    public static Factory create(final String pattern, final Object... arguments) {
+        return Factory.create(pattern, arguments);
+    }
 
     public static class Factory {
 

@@ -25,7 +25,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * @author EdGruberman (ed@rjump.com)
- * @version 1.2.0
+ * @version 1.3.0
  */
 public class CustomPlugin extends JavaPlugin {
 
@@ -59,7 +59,7 @@ public class CustomPlugin extends JavaPlugin {
     @Override
     public void reloadConfig() {
         this.config = this.loadConfig(CustomPlugin.CONFIGURATION_FILE, this.pathSeparator, this.configurationMinimums.get(CustomPlugin.CONFIGURATION_FILE));
-        this.setLogLevel(this.getConfig().getString("logLevel"));
+        this.setLogLevel(this.getConfig().getString("log-level"));
         this.getLogger().log(Level.FINEST, "YAML configuration file encoding: {0}", CustomPlugin.CONFIGURATION_TARGET);
     }
 

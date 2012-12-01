@@ -6,17 +6,22 @@ website: http://github.com/EdGruberman/AccessControl
 main: edgruberman.bukkit.accesscontrol.Main
 commands:
     'accesscontrol:check':
-        aliases: ['p?', p, check]
+        aliases: [p, 'p?', permissions, permission, perm, check]
         description: Get current effective or total (with world) value of a specific permission
         permission: accesscontrol.check
         usage: /<command> <Permission>[ (<Player>|<Principal> <World>)]
-    'accesscontrol:set':
-        aliases: [p+, set]
-        description: Add direct permission entry
-        permission: accesscontrol.set
-        usage: /<command> <Permission> [(true|false)[ <Principal>[ <World>]]][ (+user|+group)]
+    'accesscontrol:grant':
+        aliases: ['p+', grant]
+        description: Set direct permission entry as true
+        permission: accesscontrol.grant
+        usage: /<command> <Permission> [ <Principal>[ <World>]][ (+user|+group)]
+    'accesscontrol:revoke':
+        aliases: ['p-', revoke]
+        description: Set direct permission entry as false
+        permission: accesscontrol.revoke
+        usage: /<command> <Permission> [ <Principal>[ <World>]][ (+user|+group)]
     'accesscontrol:unset':
-        aliases: [p-, unset]
+        aliases: ['p_', unset]
         description: Remove direct permission entry
         permission: accesscontrol.unset
         usage: /<command> <Permission>[ <Principal>[ <World>]]
@@ -24,19 +29,23 @@ commands:
         description: Reload AccessControl plugin
         permission: accesscontrol.reload
 permissions:
-    accesscontrol.all:
-        description: Can use all AccessControl plugin commands
+    accesscontrol.admin:
+        description: Can use all features
         default: op
         children:
             accesscontrol.check: true
-            accesscontrol.set: true
+            accesscontrol.grant: true
+            accesscontrol.revoke: true
             accesscontrol.unset: true
             accesscontrol.reload: true
     accesscontrol.check:
         description: Can use check command
         default: false
-    accesscontrol.set:
-        description: Can use set command
+    accesscontrol.grant:
+        description: Can use grant command
+        default: false
+    accesscontrol.revoke:
+        description: Can use revoke command
         default: false
     accesscontrol.unset:
         description: Can use unset command
