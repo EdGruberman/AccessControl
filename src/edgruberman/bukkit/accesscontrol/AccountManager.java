@@ -127,7 +127,6 @@ public class AccountManager implements Listener {
         User user = this.getUser(name);
         if (user != null) return user;
 
-
         final MemoryConfiguration config = new MemoryConfiguration();
         config.options().pathSeparator('|');
         user = new User(this, config.createSection(name));

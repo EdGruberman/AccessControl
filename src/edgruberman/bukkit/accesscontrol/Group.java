@@ -11,12 +11,13 @@ public class Group extends Principal {
 
     Group(final AccountManager manager, final ConfigurationSection config) {
         super(manager, config);
-        Bukkit.getPluginManager().addPermission(new Permission(this.getName(), PermissionDefault.FALSE));
+        if (Bukkit.getPluginManager().getPermission(this.getName()) == null)
+            Bukkit.getPluginManager().addPermission(new Permission(this.getName(), PermissionDefault.FALSE));
     }
 
     @Override
     public void update() {
-        for (final Permissible p : Bukkit.getServer().getPluginManager().getPermission(this.getName()).getPermissibles())
+        for (final Permissible p : Bukkit.getPluginManager().getPermission(this.getName()).getPermissibles())
             if (p instanceof Player)
                 this.manager.getUser(((Player) p).getName()).update();
     }
