@@ -1,12 +1,17 @@
 log-level: INFO
 set-player-name: true
+group-name-match: '\[.*\]'
+group-name-build: '[{0}]'
+group-name-length: 15
+group-create-max: 5
 language:
-    not-set: '-> §7{1} does §enot directly set§7 {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
-    unset: '-> §7{1} §2no longer directly sets§7 {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
-    already-set: '-> §7{1} §ealready directly sets§7 {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
-    set: '-> §7{1} §2now directly sets§7 {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
+    color-code: '§'
+    not-set: '§f-> §7{1} does §enot directly set§7 {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
+    unset: '§f-> §7{1} §2no longer directly sets§7 {2} in {3}' # 1 = Principal, 2 = Permission, 3 = World
+    already-set: '§f-> §7{1} §ealready directly sets§7 {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
+    set: '§f-> §7{1} §2now directly sets§7 {2} {3} in {4}' # 1 = Principal, 2 = Permission, 3 = Value, 4 = World
     check:
-        format: '-> §7{1}@{2} {3} {4} {5}{6}' # 1 = Player, 2 = World, 3 = Nature, 4 = Permission, 5 = Value, 6 = Temporary
+        format: '§f-> §7{1}@{2} {3} {4} {5}' # 1 = Player, 2 = World, 3 = Nature, 4 = Permission, 5 = Value
         +set: '§9effectively sets§7'
         +default: '§deffectively defaults§7'
         +not-configured: '§8does not configure§7'
@@ -14,9 +19,37 @@ language:
         +inherit: '§dimplicitly configures§7'
         +true: '§atrue§7'
         +false: '§cfalse§7'
-        +temporary: '§7temporarily§7'
-    principal-not-found: '-> §7Principal §cnot found§7: §o{1}' # 1 = <Principal>
-    player-not-found: '-> §7Player §cnot found§7: §o{1}' # 1 = <Player>
-    requires-argument: '-> §7Required §cargument missing§7: §o{1}' # 1 = Argument Name
-    reload: '-> §7{1} plugin §2reloaded' # 1 = Plugin
+    describe: '§f-> {1}§7: {2} §8(§7{3,choice,0#Default: {5}|1#Creator: {4}}§8)' # 1 = Name, 2 = Description, 3 = isGroup(0|1), 4 = Creator, 5 = Default
+    granted-server: '§f-> §7Granted: {1}' # 1 = Principals
+    revoked-server: '§f-> §7Revoked: {1}' # 1 = Principals
+    granted-world: '§f-> §7{2} Granted: {1}' # 1 = Principals, 2 = World
+    revoked-world: '§f-> §7{2} Revoked: {1}' # 1 = Principals, 2 = World
+    +principals:
+        +format: '{0}'
+        +item: '§7{0}'
+        +delimiter: '§8, '
+    +group-operator: '§6!{0}' # 0 = Formatted Name
+    create: '§f-> §7Group §2created§7: §f{1}' # 1 = Group
+    create-already: '§f-> §7Group §ealready exists§7: §f{1}' # 1 = Group
+    create-max: '§f-> §7You §2can not create§7 more than §f{2}§7 groups §8(§7To view the §f{1}§7 groups you created: §5/g.creator§8)' # 1 = Created, 2 = group-create-max
+    created: '§f-> {2}§7: {3}' # 1 = Creator, 2 = Group, 3 = Description
+    created-footer: '§f-> {1} §7has created §f{2} §7group{2,choice,0#s|1#|2#s}' # 1 = Creator, 2 = Count
+    destroy-confirm: '§f-> §7Are you sure you wish to §edestroy the group§7 §f{1}§7? §8(§7To destroy: §5/{3} {1} confirm§8)' # 1 = Group, 2 = Description, 3 = Command
+    destroy: '§f-> §2Destroyed§7 group: §f{1} §8({2} references removed§8)' # 1 = Group, 2 = References
+    members-operator: '§f-> §7To add members: §5/g+ {1} §o<Player>' # 1 = Group
+    promote: '§f-> {1} §7has been §2promoted to an operator§7 of §f{2}' # 1 = Principal, 2 = Group
+    promote-notify: '§f-> §7You have been §2promoted to operator§7 of §f{2}' # 1 = Principal, 2 = Group
+    promote-already: '§f-> {1} §7is §ealready a direct operator§7 of §f{2}' # 1 = Principal, 2 = Group
+    demote: '§f-> {1} §7has been §2demoted from direct operator§7 of §f{2}' # 1 = Principal, 2 = Group
+    demote-already: '§f-> {1} §7was §ealready not a direct operator§7 of §f{2}' # 1 = Principal, 2 = Group
+    demote-self: '§f-> §7You §2can not demote§7 yourself'
+    add: '§f-> {1} §7has been §2added as a member§7 to §f{2}§7 in {3}' # 1 = Principal, 2 = Group, 3 = World
+    add-already: '§f-> {1} §7is §ealready a member§7 of §f{2}§7 in {3}' # 1 = Principal, 2 = Group, 3 = World
+    remove: '§f-> {1} §7has been §2removed as a member§7 of §f{2}§7 in {3}' # 1 = Principal, 2 = Group, 3 = World
+    remove-already: '§f-> {1} §7was §ealready not a member§7 of §f{2}§7 in {3}' # 1 = Principal, 2 = Group, 3 = World
+    not-found: '§f-> §7{1} §cnot found§7: §o{2}' # 1 = Argument Name, 2 = Argument Value
+    requires-operator: '§f-> §cOnly group operators§7 can use the {1} command' # 1 = Command Label
+    requires-argument: '§f-> §7Required §cargument missing§7: §o{1}' # 1 = Argument Name
+    requires-player: '§f-> §cOnly in-game players§7 can use the {1} command' # 1 = Command Label
+    reload: '§f-> §7{1} plugin §2reloaded' # 1 = Plugin
 version: @VERSION@

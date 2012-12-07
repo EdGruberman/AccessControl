@@ -10,7 +10,6 @@ import org.bukkit.plugin.Plugin;
 import edgruberman.bukkit.accesscontrol.AccountManager;
 import edgruberman.bukkit.accesscontrol.Main;
 import edgruberman.bukkit.accesscontrol.Principal;
-import edgruberman.bukkit.accesscontrol.User;
 
 public class Check implements CommandExecutor {
 
@@ -31,7 +30,7 @@ public class Check implements CommandExecutor {
         }
 
         if (sender instanceof ConsoleCommandSender && args.length < 2) {
-            Main.courier.send(sender, "requires-argument", "(<Player>|<Principal> <World>)");
+            Main.courier.send(sender, "requires-argument", "<Player>");
             return false;
         }
 
@@ -42,15 +41,14 @@ public class Check implements CommandExecutor {
 
             final Player player = this.plugin.getServer().getPlayerExact(target);
             if (player == null) {
-                Main.courier.send(sender, "player-not-found", target);
+                Main.courier.send(sender, "not-found", "<Player>", target);
                 return true;
             }
 
             final String permission = args[0];
             final String nature = Main.courier.format(player.isPermissionSet(permission) ? "check.+set" : "check.+default");
             final String value = Main.courier.format(player.hasPermission(permission) ? "check.+true" : "check.+false");
-            final String temporary = (this.manager.getUser(target).temporary ? Main.courier.format("check.+temporary") : "");
-            Main.courier.send(sender, "check.format", player.getName(), player.getWorld().getName(), nature, permission, value, temporary);
+            Main.courier.send(sender, "check.format", player.getName(), player.getWorld().getName(), nature, permission, value);
             return true;
         }
 
@@ -66,25 +64,22 @@ public class Check implements CommandExecutor {
             return true;
         }
 
-        String temporary = "";
         String valueText = "";
         Boolean value = principal.permissions(world).get(permission);
         if (value != null) {
             nature = Main.courier.format("check.+direct");
             valueText = Main.courier.format(value ? "check.+true" : "check.+false");
-            if (principal instanceof User && ((User) principal).temporary) temporary = Main.courier.format("check.+temporary");
         } else {
             value = principal.permissionsTotal(world).get(permission);
             if (value != null) {
                 nature = Main.courier.format("check.+inherit");
                 valueText = Main.courier.format(value ? "check.+true" : "check.+false");
-                if (principal instanceof User && ((User) principal).temporary) temporary = Main.courier.format("check.+temporary");
             } else {
                 // TODO check for offline player to determine is op, then identify default permission value
             }
         }
 
-        Main.courier.send(sender, "check.format", principal.getName(), world, nature, permission, valueText, temporary);
+        Main.courier.send(sender, "check.format", principal.getName(), world, nature, permission, valueText);
         return true;
     }
 

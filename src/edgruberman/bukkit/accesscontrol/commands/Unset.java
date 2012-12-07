@@ -3,7 +3,7 @@ package edgruberman.bukkit.accesscontrol.commands;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
 import edgruberman.bukkit.accesscontrol.AccountManager;
@@ -20,7 +20,7 @@ public class Unset implements CommandExecutor {
         this.manager = manager;
     }
 
-    // usage: /<command> <Permission>[ <Principal>[ <World>]]
+    // usage: /<command> <Permission>[ (<Player>|<Principal>[ <World>])]
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
         if (args.length == 0) {
@@ -28,43 +28,24 @@ public class Unset implements CommandExecutor {
             return false;
         }
 
-        if (sender instanceof ConsoleCommandSender && args.length < 2) {
-            Main.courier.send(sender, "requires-argument", "<Principal>");
+        if (!(sender instanceof Player) && args.length < 2) {
+            Main.courier.send(sender, "requires-argument", "<Player>");
             return false;
         }
 
         final String permission = args[0];
+        final Principal principal = this.manager.getPrincipal(( args.length >= 2 ? args[1] : sender.getName() ));
+        final String world = ( args.length >= 3 ? args[2] : null );
 
-        final Principal principal;
-        if (args.length >= 2) {
-            principal = this.manager.getPrincipal(args[1]);
-            if (principal == null) {
-                Main.courier.send(sender, "principal-not-found", args[1]);
-                return true;
-            }
-        } else {
-            principal = this.manager.createUser(sender.getName());
-        }
-
-        String world = null;
-        if (args.length >= 3) world = args[2];
-
-        if (world == null) {
-            final Boolean existing = principal.permissionsServer().get(permission);
-            if (existing == null) {
-                Main.courier.send(sender, "not-set", principal.getName(), permission, "server");
-                return true;
-            }
-        } else {
-            final Boolean existing = principal.permissionsWorld(world).get(permission);
-            if (existing == null) {
-                Main.courier.send(sender, "not-set", principal.getName(), permission, world);
-                return true;
-            }
+        final Boolean existing = ( world == null ? principal.permissionsServer().get(permission) : principal.permissionsWorld(world).get(permission) );
+        if (existing == null) {
+            Main.courier.send(sender, "not-set", principal.getName(), permission, ( world == null ? "server" : world ));
+            return true;
         }
 
         principal.unsetPermission(permission, world);
         principal.update();
+        if (principal.permissionsServer().size() == 0 && principal.worlds().size() == 0) this.manager.deregister(principal);
         ((Main) this.plugin).save();
         Main.courier.send(sender, "unset", principal.getName(), permission, (world == null ? "server" : world));
         return true;

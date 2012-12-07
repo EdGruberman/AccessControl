@@ -2,9 +2,10 @@ package edgruberman.bukkit.accesscontrol;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -12,16 +13,29 @@ public abstract class Principal {
 
     final AccountManager manager;
     final ConfigurationSection config;
+    final Type type;
 
-    Principal(final AccountManager manager, final ConfigurationSection config) {
+    Principal(final AccountManager manager, final ConfigurationSection config, final Type type) {
         this.manager = manager;
         this.config = config;
+        this.type = type;
     }
 
     public abstract void update();
 
     public String getName() {
         return this.config.getName();
+    }
+
+    @Override
+    public String toString() {
+        return this.getName();
+    }
+
+    public Set<String> worlds() {
+        final ConfigurationSection worlds = this.config.getConfigurationSection("worlds");
+        if ( worlds == null) return Collections.emptySet();
+        return worlds.getKeys(false);
     }
 
     /**
@@ -31,7 +45,7 @@ public abstract class Principal {
         final ConfigurationSection server = this.config.getConfigurationSection("server");
         if (server == null) return Collections.emptyMap();
 
-        final Map<String, Boolean> permissions = new LinkedHashMap<String, Boolean>();
+        final Map<String, Boolean> permissions = new HashMap<String, Boolean>();
         for (final String key : server.getKeys(false))
             permissions.put(key.toLowerCase(), server.getBoolean(key));
 
@@ -48,7 +62,7 @@ public abstract class Principal {
         final ConfigurationSection worldConfig = worlds.getConfigurationSection(world);
         if (worldConfig == null) return Collections.emptyMap();
 
-        final Map<String, Boolean> permissions = new LinkedHashMap<String, Boolean>();
+        final Map<String, Boolean> permissions = new HashMap<String, Boolean>();
         for (final String key : worldConfig.getKeys(false))
             permissions.put(key.toLowerCase(), worldConfig.getBoolean(key));
 
@@ -56,10 +70,10 @@ public abstract class Principal {
     }
 
     /**
-     * Combined (server and world) Direct Permissions
+     * Combined (server and world) Direct Permissions for a specific world
      */
     public Map<String, Boolean> permissions(final String world) {
-        final Map<String, Boolean> permissions = new LinkedHashMap<String, Boolean>();
+        final Map<String, Boolean> permissions = new HashMap<String, Boolean>();
 
         permissions.putAll(this.permissionsServer());
         permissions.putAll(this.permissionsWorld(world)); // World overrides Server
@@ -71,7 +85,7 @@ public abstract class Principal {
      * Combined (server and world) Total (direct and inherited) Permissions
      */
     public Map<String, Boolean> permissionsTotal(final String world) {
-        final Map<String, Boolean> combined = new LinkedHashMap<String, Boolean>();
+        final Map<String, Boolean> combined = new HashMap<String, Boolean>();
 
         // Inherited (Children override Parents)
         for (final Group group : this.memberships(world))
@@ -140,6 +154,12 @@ public abstract class Principal {
         if (worldConfig == null) worldConfig = worlds.createSection(world);
 
         return worldConfig;
+    }
+
+
+
+    public enum Type {
+        GROUP, USER;
     }
 
 }
