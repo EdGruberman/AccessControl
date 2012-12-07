@@ -21,7 +21,7 @@ public class FormattedArrayList<E> extends ArrayList<E> {
     }
 
     public FormattedArrayList(final ConfigurationSection config) {
-        this(config.getString("+format"), config.getString("+item"), config.getString("+delimiter"));
+        this(config.getString("+format", "{0}"), config.getString("+item", "{0}"), config.getString("+delimiter", " "));
     }
 
     @Override
