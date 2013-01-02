@@ -2,6 +2,7 @@ package edgruberman.bukkit.accesscontrol;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -10,7 +11,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.MemoryConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,39 +25,50 @@ import org.bukkit.plugin.Plugin;
 public final class AccountManager implements Listener {
 
     final Plugin plugin;
-    final boolean setPlayerName;
-    final Pattern groupMatch;
     final String groupBuild;
+    final Pattern groupMatch;
+    final int groupLength;
 
     final Map<String, User> users = new LinkedHashMap<String, User>();
     final Map<String, Group> groups = new LinkedHashMap<String, Group>();
-    final Map<String, Group> defaultGroups = new HashMap<String, Group>();
 
-    public AccountManager(final Plugin plugin, final boolean setPlayerName, final String groupMatch, final String groupBuild, final MemoryConfiguration usersConfig, final MemoryConfiguration groupsConfig) {
+    final Principal defaults;
+
+    public AccountManager(final Plugin plugin, final String groupBuild, final String groupMatch, final int groupLength) {
         this.plugin = plugin;
-        this.setPlayerName = setPlayerName;
-        this.groupMatch = Pattern.compile(groupMatch);
         this.groupBuild = groupBuild;
+        this.groupMatch = Pattern.compile(groupMatch);
+        this.groupLength = groupLength;
+        this.defaults = new Principal(null, new HashMap<String, Map<String, Boolean>>(), new HashMap<String, Map<Group, Boolean>>(), this);
+    }
+
+    public void load(final MemoryConfiguration usersConfig, final MemoryConfiguration groupsConfig) {
+        this.users.clear();
+        this.groups.clear();
+
+        // groups - load first so users referencing groups use same group object
+        for (final String name : groupsConfig.getKeys(false)) {
+            final Group group = Group.fromConfiguration(groupsConfig.getConfigurationSection(name));
+            final Group previous = this.groups.put(group.getName().toLowerCase(), group);
+            // replace previous references to group by name only with fully configured group object
+            if (previous != null)
+                for (final Group existing : this.groups.values())
+                    for (final String world : existing.memberships.keySet())
+                        if (existing.memberships.get(world).containsKey(previous)) {
+                            existing.memberships.get(world).remove(previous);
+                            existing.memberships.get(world).put(group, true);
+                        }
+        }
 
         // users
         for (final String name : usersConfig.getKeys(false)) {
-            final User user = new User(this, usersConfig.getConfigurationSection(name));
+            final User user = User.fromConfiguration(usersConfig.getConfigurationSection(name));
             this.users.put(user.getName().toLowerCase(), user);
         }
 
-        // groups
-        for (final String name : groupsConfig.getKeys(false)) {
-            final Group group = new Group(this, groupsConfig.getConfigurationSection(name));
-            this.groups.put(group.getName().toLowerCase(), group);
-            if (group.isDefault()) this.defaultGroups.put(group.getName().toLowerCase(), group);
-        }
-
         // update existing players
-        for (final Player player : Bukkit.getOnlinePlayers()) {
-            final User user = (User) this.getPrincipal(player.getName());
-            this.register(user);
-            user.update(player);
-        }
+        for (final Player player : Bukkit.getOnlinePlayers())
+            this.createUser(player.getName()).update(player);
     }
 
     public void clear() {
@@ -65,34 +77,19 @@ public final class AccountManager implements Listener {
         this.groups.clear();
     }
 
-    public ConfigurationSection export() {
-        final MemoryConfiguration exported = new MemoryConfiguration();
-        exported.options().pathSeparator(Main.UNLIKELY);
-
-        final ConfigurationSection usersConfig = exported.createSection("users");
-        for (final User user : this.users.values())
-            if (user.config.getValues(false).size() > 0) usersConfig.createSection(user.getName(), user.config.getValues(true));
-
-        final ConfigurationSection groupsConfig = exported.createSection("groups");
-        for (final Group group : this.groups.values())
-            groupsConfig.createSection(group.getName(), group.config.getValues(true));
-
-        return exported;
+    public Collection<Group> getGroups() {
+        return Collections.unmodifiableCollection(this.groups.values());
     }
 
-    /** permissions associated with default groups */
-    public Map<String, Boolean> defaultPermissions(final String world) {
-        if (this.defaultGroups.isEmpty()) return Collections.emptyMap();
+    public Collection<User> getUsers() {
+        return Collections.unmodifiableCollection(this.users.values());
+    }
 
-        final Map<String, Boolean> defaults = new LinkedHashMap<String, Boolean>();
-        for (final Group group : this.defaultGroups.values())
-            defaults.putAll(group.permissionsTotal(world));
-
-        // groups themselves override their children
-        for (final Group group : this.defaultGroups.values())
-            defaults.put(group.getName(), true);
-
-        return defaults;
+    /** permissions applicable to a user with no direct permissions */
+    public Map<String, Boolean> defaults(final String world, final Map<String, Boolean> append) {
+        this.defaults.permissions(world, append);
+        append.remove(this.defaults.getName()); // remove default principal self permission
+        return append;
     }
 
     public boolean isGroup(final String name) {
@@ -100,95 +97,122 @@ public final class AccountManager implements Listener {
     }
 
     public String formatGroup(final String name) {
-        return ( this.isGroup(name) ? name : MessageFormat.format(this.groupBuild, name));
+        if (this.isGroup(name)) return name;
+        final int buildLength = MessageFormat.format(this.groupBuild, "").length();
+        final int max = Math.min(name.length(), this.groupLength - buildLength);
+        final String trimmed = name.substring(0, max);
+        return MessageFormat.format(this.groupBuild, trimmed);
     }
 
+    public Principal createPrincipal(final String name) {
+        return ( this.isGroup(name) ? this.createGroup(name) : this.createUser(name) );
+    }
+
+    /** @return existing Group or newly created Group */
+    public Group createGroup(final String name) {
+        Group group = this.getGroup(name);
+        if (group != null) return group;
+
+        group = new Group(this.formatGroup(name), this);
+        this.groups.put(group.name.toLowerCase(), group);
+        return group;
+    }
+
+    /** @return existing User or newly created User */
+    public User createUser(final String name) {
+        User user = this.getUser(name);
+        if (user != null) return user;
+
+        user = new User(Bukkit.getOfflinePlayer(name).getName(), this);
+        this.users.put(user.name.toLowerCase(), user);
+        return user;
+    }
+
+    /** @return existing Principal or null */
     public Principal getPrincipal(final String name) {
         return ( this.isGroup(name) ? this.getGroup(name) : this.getUser(name) );
     }
 
-    public List<Group> getGroups() {
-        return new ArrayList<Group>(this.groups.values());
-    }
-
+    /** @return existing Group or null */
     public Group getGroup(final String name) {
-        final Group group = this.groups.get(this.formatGroup(name).toLowerCase());
-        if (group != null) return group;
-
-        final MemoryConfiguration groupConfig = new MemoryConfiguration();
-        groupConfig.options().pathSeparator(Main.UNLIKELY);
-        return new Group(this, groupConfig.createSection(this.formatGroup(name)));
+        return this.groups.get(this.formatGroup(name).toLowerCase());
     }
 
-    public List<User> getUsers() {
-        return new ArrayList<User>(this.users.values());
-    }
-
+    /** @return existing User or null */
     public User getUser(final String name) {
-        final User user = this.users.get(name.toLowerCase());
-        if (user != null) return user;
-
-        final MemoryConfiguration userConfig = new MemoryConfiguration();
-        userConfig.options().pathSeparator(Main.UNLIKELY);
-        return new User(this, userConfig.createSection(name));
+        return this.users.get(name.toLowerCase());
     }
 
-    /** registered principals are persistent between restarts */
-    public boolean isRegistered(final Principal principal) {
-        switch (principal.type) {
-        case USER:
-            return this.users.containsKey(principal.getName().toLowerCase());
-        case GROUP:
-            return this.groups.containsKey(principal.getName().toLowerCase());
-        }
-        throw new IllegalStateException("unrecognized Principal.Type: " + principal.type.name());
+    public List<Principal> removePrincipal(final Principal principal) {
+        if (principal instanceof Group) return this.removeGroup((Group) principal);
+        if (principal instanceof User) return this.removeUser((User) principal);
+        throw new IllegalArgumentException("unsupported Principal class: " + principal.getClass().getName());
     }
 
-    public boolean register(final Principal principal) {
-        switch (principal.type) {
-        case USER:
-            return (this.users.put(principal.getName().toLowerCase(), (User) principal) != null);
-        case GROUP:
-            return (this.groups.put(principal.getName().toLowerCase(), (Group) principal) != null);
-        }
-        throw new IllegalStateException("unrecognized Principal.Type: " + principal.type.name());
+    public List<Principal> removeGroup(final Group group) {
+        final List<Principal> principals = new ArrayList<Principal>();
+        principals.addAll(this.getGroups());
+        principals.addAll(this.getUsers());
+
+        // unset all direct references
+        final List<Principal> changed = new ArrayList<Principal>();
+        for (final Principal principal : principals)
+            for (final String world : principal.worlds())
+                if (principal.unsetMembership(group, world) != null)
+                    changed.add(principal);
+
+        this.groups.remove(group.getName().toLowerCase());
+        return changed;
     }
 
-    public boolean deregister(final Principal principal) {
-        switch (principal.type) {
-        case USER:
-            return (this.users.remove(principal.getName().toLowerCase()) != null);
-        case GROUP:
-            return (this.groups.remove(principal.getName().toLowerCase()) != null);
-        }
-        throw new IllegalStateException("unrecognized Principal.Type: " + principal.type.name());
+    public List<Principal> removeUser(final User user) {
+        this.users.remove(this);
+        return Collections.emptyList();
     }
 
     /** configure player permissions when player connects to server */
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerLogin(final PlayerLoginEvent login) {
-        final User user = (User) this.getPrincipal(login.getPlayer().getName());
-        this.register(user);
-        user.update(login.getPlayer());
+        this.createUser(login.getPlayer().getName()).update(login.getPlayer());
     }
 
     /** update player permissions when player changes worlds */
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onPlayerWorldChange(final PlayerChangedWorldEvent changed) {
-        this.getPrincipal(changed.getPlayer().getName()).update();
+        this.getUser(changed.getPlayer().getName()).update();
     }
 
     /** clean-up permission attachment when player leaves server */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerQuit(final PlayerQuitEvent quit) {
         // ignore ghost account quit
-        for (final Player player : Bukkit.getOnlinePlayers())
-            if (player.getName().equals(quit.getPlayer().getName()))
-                return;
+        if (quit.getPlayer().isOnline()) return;
 
-        final User user = (User) this.getPrincipal(quit.getPlayer().getName());
+        final User user = this.getUser(quit.getPlayer().getName());
         user.detach();
-        if (user.config.getValues(false).size() == 0) this.users.remove(user);
+        if (!user.hasDirect()) this.users.remove(user);
+    }
+
+    public Configuration toConfiguration() {
+        final Configuration config = new MemoryConfiguration();
+        config.set("users", this.toConfigurationUsers());
+        config.set("groups", this.toConfigurationGroups());
+        return config;
+    }
+
+    public Configuration toConfigurationUsers() {
+        final Configuration config = new MemoryConfiguration();
+        for (final User user : this.users.values())
+            if (user.hasDirect()) // skip saving connected users that have no direct memberships or permissions to save
+                config.set(user.getName(), user.toConfiguration());
+        return config;
+    }
+
+    public Configuration toConfigurationGroups() {
+        final Configuration config = new MemoryConfiguration();
+        for (final Group group : this.groups.values())
+            config.set(group.getName(), group.toConfiguration());
+        return config;
     }
 
 }

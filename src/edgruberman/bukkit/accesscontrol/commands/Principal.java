@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import edgruberman.bukkit.accesscontrol.AccountManager;
 import edgruberman.bukkit.accesscontrol.Group;
 import edgruberman.bukkit.accesscontrol.Main;
+import edgruberman.bukkit.accesscontrol.commands.group.Members;
 import edgruberman.bukkit.accesscontrol.util.FormattedArrayList;
 
 public class Principal implements CommandExecutor {
@@ -33,27 +34,58 @@ public class Principal implements CommandExecutor {
         }
 
         final edgruberman.bukkit.accesscontrol.Principal principal = this.manager.getPrincipal(( args.length >= 1 ? args[0] : sender.getName() ));
-        if (!this.manager.isRegistered(principal)) {
-            Main.courier.send(sender, "not-found", "<Principal>", args[0]);
+        if (principal == null) {
+            Main.courier.send(sender, "unknown-argument", "<Principal>", args[0]);
             return false;
         }
 
         final List<String> granted = new FormattedArrayList<String>(Main.courier.getBase().getConfigurationSection("+principals"));
         final List<String> revoked = new FormattedArrayList<String>(Main.courier.getBase().getConfigurationSection("+principals"));
 
-        for (final Map.Entry<String, Boolean> entry : principal.permissionsServer().entrySet())
+        // server memberships
+        for (final Map.Entry<Group, Boolean> entry : principal.getMemberships(null).entrySet()) {
+            if (entry.getValue()) {
+                granted.add(( principal.permissions(null).containsKey("accesscontrol.controller." + entry.getKey().getName()) ? Main.courier.format("+group-controller", entry.getKey().getName()) : entry.getKey().getName() ));
+            } else {
+                revoked.add(entry.getKey().getName());
+            }
+        }
+
+        // server permissions
+        for (final Map.Entry<String, Boolean> entry : principal.getPermissions(null).entrySet()) {
             if (entry.getValue()) {
                 final Group group = this.manager.getGroup(entry.getKey());
-                granted.add(( group != null && group.isOperator(principal) ? Main.courier.format("+group-operator", entry.getKey()) : entry.getKey() ));
+                granted.add(( group != null && principal.permissions(null).containsKey("accesscontrol.controller." + group.getName()) ? Main.courier.format("+group-controller", entry.getKey()) : entry.getKey() ));
             } else {
                 revoked.add(entry.getKey());
             }
+        }
 
         final Map<String, List<String>> worlds = new HashMap<String, List<String>>();
         List<String> grantedWorld;
         List<String> revokedWorld;
+
         for (final String world : principal.worlds()) {
-            for (final Map.Entry<String, Boolean> entry : principal.permissionsWorld(world).entrySet()) {
+            if (world == null) continue; // skip server
+
+            // world memberships
+            for (final Map.Entry<Group, Boolean> entry : principal.getMemberships(world).entrySet()) {
+                if (entry.getValue()) {
+                    grantedWorld = worlds.get(world);
+                    if (grantedWorld == null) grantedWorld = new FormattedArrayList<String>(Main.courier.getBase().getConfigurationSection("+principals"));
+                    grantedWorld.add(( principal.permissions(null).containsKey("accesscontrol.controller." + entry.getKey().getName()) ? Main.courier.format("+group-controller", entry.getKey().getName()) : entry.getKey().getName() ));
+                    worlds.put(world, grantedWorld);
+
+                } else {
+                    revokedWorld = worlds.get(world);
+                    if (revokedWorld == null) grantedWorld = new FormattedArrayList<String>(Main.courier.getBase().getConfigurationSection("+principals"));
+                    revokedWorld.add(entry.getKey().getName());
+                    worlds.put(world, revokedWorld);
+                }
+            }
+
+            // world permissions
+            for (final Map.Entry<String, Boolean> entry : principal.getPermissions(world).entrySet()) {
                 if (entry.getValue()) {
                     grantedWorld = worlds.get(world);
                     if (grantedWorld == null) grantedWorld = new FormattedArrayList<String>(Main.courier.getBase().getConfigurationSection("+principals"));
@@ -69,23 +101,23 @@ public class Principal implements CommandExecutor {
             }
         }
 
-        Collections.sort(granted, Members.OperatorsFirst.COMPARATOR);
+        Collections.sort(granted, new Members.ControllersFirst());
         Collections.sort(revoked);
         if (granted.size() > 0) Main.courier.send(sender, "granted-server", granted);
-        if (revoked.size() > 0) Main.courier.send(sender, "revoked-server", revoked);
+        if (revoked.size() > 0) Main.courier.send(sender, "denied-server", revoked);
 
         final List<String> worldsSorted = new ArrayList<String>(worlds.keySet());
         Collections.sort(worldsSorted);
         for (final String world : worldsSorted) {
             grantedWorld = worlds.get(world);
             if (grantedWorld != null) {
-                Collections.sort(grantedWorld);
-                if (grantedWorld.size() > 0) Main.courier.send(sender, "granted-world", grantedWorld);
+                Collections.sort(grantedWorld, new Members.ControllersFirst());
+                if (grantedWorld.size() > 0) Main.courier.send(sender, "granted-world", grantedWorld, world);
             }
             revokedWorld = worlds.get(world);
             if (revokedWorld != null) {
                 Collections.sort(revokedWorld);
-                if (revokedWorld.size() > 0) Main.courier.send(sender, "revoked-world", revokedWorld);
+                if (revokedWorld.size() > 0) Main.courier.send(sender, "denied-world", revokedWorld, world);
             }
         }
         return true;

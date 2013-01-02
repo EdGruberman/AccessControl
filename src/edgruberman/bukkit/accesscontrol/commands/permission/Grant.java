@@ -1,4 +1,4 @@
-package edgruberman.bukkit.accesscontrol.commands;
+package edgruberman.bukkit.accesscontrol.commands.permission;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -33,26 +33,19 @@ public class Grant implements CommandExecutor {
             return false;
         }
 
-        final String principal = ( args.length >= 2 ? args[1] : null );
-        final String world = ( args.length >= 4 ? args[3] : null );
-        this.set(sender, args[0], true, principal, world);
-        return true;
-    }
-
-    boolean set(final CommandSender sender, final String permission, final boolean value, final String principal, final String world) {
-        final Principal p = this.manager.getPrincipal(( principal != null ? principal : sender.getName() ));
-        if (!this.manager.isRegistered(p)) this.manager.register(p);
-
-        final Boolean existing = ( world == null ? p.permissionsServer().get(permission) : p.permissionsWorld(world).get(permission) );
-        if (existing != null && existing == value) {
-            Main.courier.send(sender, "already-set", p.getName(), permission, value, ( world == null ? "server" : world ));
+        final String permission = args[0];
+        final Principal principal = this.manager.createPrincipal(( args.length >= 2 ? args[1] : sender.getName() ));
+        final String world = ( args.length >= 3 ? args[2] : null );
+        final Boolean previous = principal.direct(world).get(permission);
+        if (previous == Boolean.TRUE) {
+            Main.courier.send(sender, "grant-already", principal.getName(), permission, ( world == null ? "server" : world ));
             return false;
         }
 
-        p.setPermission(permission, value, world);
-        p.update();
+        principal.setPermission(permission, true, world);
+        principal.update();
         ((Main) this.plugin).save();
-        Main.courier.send(sender, "set", p.getName(), permission, value, ( world == null ? "server" : world ));
+        Main.courier.send(sender, "grant", principal.getName(), permission, ( world == null ? "server" : world ), ( previous == null ? 0 : -1 ));
         return true;
     }
 

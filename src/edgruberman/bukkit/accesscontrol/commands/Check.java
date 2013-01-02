@@ -41,7 +41,7 @@ public class Check implements CommandExecutor {
 
             final Player player = this.plugin.getServer().getPlayerExact(target);
             if (player == null) {
-                Main.courier.send(sender, "not-found", "<Player>", target);
+                Main.courier.send(sender, "unknown-argument", "<Player>", target);
                 return true;
             }
 
@@ -65,12 +65,12 @@ public class Check implements CommandExecutor {
         }
 
         String valueText = "";
-        Boolean value = principal.permissions(world).get(permission);
+        Boolean value = principal.direct(world).get(permission);
         if (value != null) {
             nature = Main.courier.format("check.+direct");
             valueText = Main.courier.format(value ? "check.+true" : "check.+false");
         } else {
-            value = principal.permissionsTotal(world).get(permission);
+            value = principal.permissions(world).get(permission);
             if (value != null) {
                 nature = Main.courier.format("check.+inherit");
                 valueText = Main.courier.format(value ? "check.+true" : "check.+false");
