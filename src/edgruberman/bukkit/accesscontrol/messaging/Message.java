@@ -3,7 +3,9 @@ package edgruberman.bukkit.accesscontrol.messaging;
 import java.text.DateFormat;
 import java.text.Format;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import org.bukkit.Bukkit;
@@ -13,7 +15,7 @@ import org.bukkit.command.CommandSender;
  * {@link java.text.MessageFormat MessageFormat} that sets time zone of each date argument for target
  *
  * @author EdGruberman (ed@rjump.com)
- * @version 2.2.0
+ * @version 3.0.0
  */
 public class Message extends MessageFormat {
 
@@ -34,6 +36,16 @@ public class Message extends MessageFormat {
         this.original = pattern;
         this.arguments = arguments;
         this.suffix = null;
+    }
+
+    public Confirmation deliver(final Recipients recipients) {
+        final List<CommandSender> received = new ArrayList<CommandSender>();
+        for (final CommandSender target : recipients.targets()) {
+            final String formatted = this.format(target).toString();
+            target.sendMessage(formatted);
+            received.add(target);
+        }
+        return recipients.confirm(this, received);
     }
 
     /** resolve arguments and apply to pattern adjusting as necessary for target */
@@ -57,12 +69,17 @@ public class Message extends MessageFormat {
 
     /** @param suffix applied to last message in suffix chain to be formatted as a single message */
     public Message append(final Message suffix) {
-        if (this.suffix == null) {
-            this.suffix = suffix;
-        } else {
+        if (this.suffix != null) {
             this.suffix.append(suffix);
+            return this;
         }
+
+        this.suffix = suffix;
         return this;
+    }
+
+    public Message getSuffix() {
+        return this.suffix;
     }
 
     /** format message for sending to a generic target */
