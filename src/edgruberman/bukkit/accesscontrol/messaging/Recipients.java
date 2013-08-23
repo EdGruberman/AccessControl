@@ -19,7 +19,7 @@ import org.bukkit.permissions.Permissible;
  * collection of one or more {@link org.bukkit.command.CommandSender
  * CommandSender}s
  * @author EdGruberman (ed@rjump.com)
- * @version 4.0.0
+ * @version 5.0.0
  */
 public abstract class Recipients {
 
@@ -46,13 +46,13 @@ public abstract class Recipients {
     public abstract List<CommandSender> targets();
 
     /** generate receipt */
-    public abstract Confirmation confirm(final Message sent, final List<CommandSender> received);
+    public abstract Message.Confirmation confirm(final Message sent, final List<CommandSender> received);
 
 
 
     /**
      * single CommandSender
-     * @version 4.0.0
+     * @version 5.0.0
      */
     public static class Sender extends Recipients {
 
@@ -77,8 +77,8 @@ public abstract class Recipients {
         }
 
         @Override
-        public Confirmation confirm(final Message sent, final List<CommandSender> received) {
-            return new Confirmation(this.getLevel(), received, "[SEND>{1}] {0}", sent, this.target.getName());
+        public Message.Confirmation confirm(final Message sent, final List<CommandSender> received) {
+            return new Message.Confirmation(this.getLevel(), received, "[SEND>{1}] {0}", sent, this.target.getName());
         }
 
         protected Level getLevel() {
@@ -111,7 +111,7 @@ public abstract class Recipients {
 
     /**
      * CommandSenders that have the specified permission set true
-     * @version 4.0.0
+     * @version 5.0.0
      */
     public static class PermissionSubscribers extends Recipients {
 
@@ -138,8 +138,8 @@ public abstract class Recipients {
         }
 
         @Override
-        public Confirmation confirm(final Message sent, final List<CommandSender> received) {
-            return new Confirmation(Level.FINER, received, "[PUBLISH-{1}({2})] {0}", sent, this.permission, received.size());
+        public Message.Confirmation confirm(final Message sent, final List<CommandSender> received) {
+            return new Message.Confirmation(Level.FINER, received, "[PUBLISH-{1}({2})] {0}", sent, this.permission, received.size());
         }
 
     }
@@ -148,7 +148,7 @@ public abstract class Recipients {
 
     /**
      * all players in server
-     * @version 4.0.0
+     * @version 5.0.0
      */
     public static class ServerPlayers extends PermissionSubscribers {
 
@@ -157,8 +157,8 @@ public abstract class Recipients {
         }
 
         @Override
-        public Confirmation confirm(final Message sent, final List<CommandSender> received) {
-            return new Confirmation(Level.FINEST, received, "[BROADCAST({1})] {0}", sent, received.size());
+        public Message.Confirmation confirm(final Message sent, final List<CommandSender> received) {
+            return new Message.Confirmation(Level.FINEST, received, "[BROADCAST({1})] {0}", sent, received.size());
         }
 
     }
@@ -167,7 +167,7 @@ public abstract class Recipients {
 
     /**
      * players in the specified world
-     * @version 4.0.0
+     * @version 5.0.0
      */
     public static class WorldPlayers extends Recipients {
 
@@ -191,8 +191,8 @@ public abstract class Recipients {
         }
 
         @Override
-        public Confirmation confirm(final Message sent, final List<CommandSender> received) {
-            return new Confirmation(Level.FINE, received, "[WORLD%{1}({2})] {0}", sent, this.world.getName(), received.size());
+        public Message.Confirmation confirm(final Message sent, final List<CommandSender> received) {
+            return new Message.Confirmation(Level.FINE, received, "[WORLD%{1}({2})] {0}", sent, this.world.getName(), received.size());
         }
 
     }

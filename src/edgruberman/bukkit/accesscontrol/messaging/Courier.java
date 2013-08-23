@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
 import org.bukkit.World;
@@ -15,20 +16,20 @@ import org.bukkit.plugin.Plugin;
 /**
  * handles message delivery and logging
  * @author EdGruberman (ed@rjump.com)
- * @version 6.0.1
+ * @version 7.0.0
  */
 public class Courier {
 
-    protected final Plugin plugin;
+    protected final Logger logger;
     protected final boolean timestamp;
 
     protected Courier(final Courier.Factory parameters) {
-        this.plugin = parameters.plugin;
+        this.logger = parameters.logger;
         this.timestamp = parameters.timestamp;
     }
 
-    public Plugin getPlugin() {
-        return this.plugin;
+    public Logger getLogger() {
+        return this.logger;
     }
 
     /**
@@ -50,7 +51,7 @@ public class Courier {
      * @param pattern message text that contains format elements
      */
     public Message draft(final String pattern, final Object... arguments) {
-        final Message.Factory factory = Message.create(pattern, arguments);
+        final Message.Factory factory = Message.Factory.create(pattern, arguments);
         if (this.timestamp) factory.timestamp();
         return factory.build();
     }
@@ -60,13 +61,8 @@ public class Courier {
      * (this will not timestamp the message)
      */
     public void submit(final Recipients recipients, final Message message) {
-        try {
-            final Confirmation confirmation = message.deliver(recipients);
-            this.plugin.getLogger().log(confirmation.toLogRecord());
-
-        } catch (final RuntimeException e) {
-            this.plugin.getLogger().log(Level.WARNING, "Error submitting message for delivery; pattern: \"{0}\"{1}; {2}", new Object[] { message.original, ChatColor.RESET, e });
-        }
+        final Message.Confirmation confirmation = message.deliver(recipients);
+        this.logger.log(confirmation.toLogRecord());
     }
 
     /** deliver message to individual player */
@@ -99,22 +95,18 @@ public class Courier {
 
 
 
-    public static Factory create(final Plugin plugin) {
-        return Factory.create(plugin);
-    }
-
     public static class Factory {
 
         /** prepends a timestamp to all messages */
-        public static Factory create(final Plugin plugin) {
-            return new Factory(plugin);
+        public static Courier.Factory create(final Logger logger) {
+            return new Courier.Factory(logger);
         }
 
-        protected final Plugin plugin;
+        protected final Logger logger;
         protected boolean timestamp;
 
-        protected Factory(final Plugin plugin) {
-            this.plugin = plugin;
+        protected Factory(final Logger logger) {
+            this.logger = logger;
             this.setTimestamp(true);
         }
 
@@ -122,7 +114,7 @@ public class Courier {
          * @param timestamp true to prepend timestamp to arguments
          * of all messages
          */
-        public Factory setTimestamp(final boolean timestamp) {
+        public Courier.Factory setTimestamp(final boolean timestamp) {
             this.timestamp = true;
             return this;
         }
@@ -180,7 +172,7 @@ public class Courier {
         public List<String> translate(final String key) {
             final List<String> result = this.getStringList(key);
             if (result.size() == 0 || result.get(0) == null || result.get(0).equals("")) {
-                this.plugin.getLogger().log(Level.FINEST, "String value not found for {0} in {1}", new Object[] { key, ( this.base.getCurrentPath().equals("") ? "(root)" : this.base.getCurrentPath() ) });
+                this.logger.log(Level.FINEST, "String value not found for {0} in {1}", new Object[] { key, ( this.base.getCurrentPath().equals("") ? "(root)" : this.base.getCurrentPath() ) });
                 return Collections.emptyList();
             }
 
@@ -292,37 +284,33 @@ public class Courier {
 
 
 
-        public static Factory create(final Plugin plugin) {
-            return Factory.create(plugin);
-        }
-
         public static class Factory extends Courier.Factory {
 
             /**
              * prepends a timestamp to all messages and retrieves message
              * patterns from plugin root configuration
              */
-            public static Factory create(final Plugin plugin) {
-                return new Factory(plugin);
+            public static ConfigurationCourier.Factory create(final Plugin plugin) {
+                return new ConfigurationCourier.Factory(plugin.getLogger(), plugin.getConfig());
             }
 
             protected ConfigurationSection base;
             protected char formatCode;
 
-            protected Factory(final Plugin plugin) {
-                super(plugin);
-                this.setBase(plugin.getConfig());
+            protected Factory(final Logger logger, final ConfigurationSection section) {
+                super(logger);
+                this.setBase(section);
             }
 
             /** @param section base section containing message patterns */
-            public Factory setBase(final ConfigurationSection section) {
+            public ConfigurationCourier.Factory setBase(final ConfigurationSection section) {
                 if (section == null) throw new IllegalArgumentException("ConfigurationSection can not be null");
                 this.base = section;
                 return this;
             }
 
             /** @param path path to section relative to current base section containing message patterns */
-            public Factory setPath(final String path) {
+            public ConfigurationCourier.Factory setPath(final String path) {
                 final ConfigurationSection section = this.base.getConfigurationSection(path);
                 if (section == null) throw new IllegalArgumentException("ConfigurationSection not found: " + path);
                 this.setBase(section);
@@ -333,7 +321,7 @@ public class Courier {
              * @param key path to format code prefix character in base
              * configuration
              */
-            public Factory setFormatCode(final String key) {
+            public ConfigurationCourier.Factory setFormatCode(final String key) {
                 final String value = this.base.getString(key);
                 if (value == null) throw new IllegalArgumentException("Color code not found: " + this.base.getCurrentPath() + this.base.getRoot().options().pathSeparator() + key);
                 this.setFormatCode(value.charAt(0));
@@ -345,13 +333,13 @@ public class Courier {
              * in message patterns (default is
              * {@value org.bukkit.ChatColor#COLOR_CHAR}, common alternate
              * is &) */
-            public Factory setFormatCode(final char formatCode) {
+            public ConfigurationCourier.Factory setFormatCode(final char formatCode) {
                 this.formatCode = formatCode;
                 return this;
             }
 
             @Override
-            public Factory setTimestamp(final boolean timestamp) {
+            public ConfigurationCourier.Factory setTimestamp(final boolean timestamp) {
                 super.setTimestamp(timestamp);
                 return this;
             }

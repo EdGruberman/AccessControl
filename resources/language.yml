@@ -1,0 +1,24 @@
+format-code: '§'
+check: '§f-> {2} {4,choice,0#§ddefaults|1#§3sets} §f{1} {3,choice,0#§cfalse|1#§atrue} §8(§7{5}§8)' # 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = set(0=default|1=set), 5 = source
+effective:
+  permission: '§f-> {2} §3sets §f{1} {3,choice,0#§cfalse|1#§atrue} §8(§7{4}§8)' # 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = source
+  summary: '§f-> §7Page §f{1}§7 of {2}' # 0 = generated, 1 = current page, 2 = total pages
+  none: '§f-> §eNo permissions found§7 that match§8: §f{1}' # 0 = generated, 1 = match
+trace:
+  assignment: '§f-> §7{3,choice,0#User|1#Group} §f{2} {5,choice,0#§6inherits|1#§3directly applies} §f{1} §7as {4,choice,0#§cfalse|1#§atrue} {5,choice,0#§7from §f{6}|1#}' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = value(0=false|1=true), 5 = direct(0=inherited|1=direct), 6 = origin
+  default: '§f-> §7{3,choice,0#User|1#Group} §f{2} §7has no assignments for §f{1} §8(§7Default§8: §d{5} §8= {4,choice,0#§cfalse|1#§atrue}§8)' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = value(0=false|1=true), 5 = default
+default: '§f-> §7Default of §f{1} §7is §d{4} §8(§f{2} §8= {3,choice,0#§cfalse|1#§atrue}§8, §7{5,choice,0#Unregistered|1#Registered}§8)' # 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = default, 5 = registered(0=false|1=true)
+deny:
+  success: '§f-> §2Denied §f{1} {2} §7in §f{3} §8(§7Previously {4,choice,0#default|1#granted}§8)' # 0 = generated, 1 = principal, 2 = permission, 3 = context, 4 = previous(0=default|1=granted)
+  already: '§f-> {1} §ealready denied §f{2} §7in §f{3}' # 0 = generated, 1 = principal, 2 = permission, 3 = context
+grant:
+  success: '§f-> §2Granted §f{1} {2} §7in §f{3} §8(§7Previously {4,choice,-1#denied|0#default}§8)' # 0 = generated, 1 = principal, 2 = permission, 3 = context, 4 = previous(-1=denied|0=default)
+  already: '§f-> {1} §ealready granted §f{2} §7in §f{3}' # 0 = generated, 1 = principal, 2 = permission, 3 = context
+revoke:
+  success: '§f-> §2Revoked §7{4,choice,-1#deny|1#grant} on §f{1} §7for §f{2} §7in §f{3}' # 0 = generated, 1 = principal, 2 = permission, 3 = context, 4 = previous(-1=denied|1=granted)
+  already: '§f-> {1} §ealready defaults §f{2} §7in §f{3}' # 0 = generated, 1 = principal, 2 = permission, 3 = context
+reload: '§f-> §2Reloaded §7{1} plugin' # 0 = generated, 1 = plugin name
+requires-player: '§f-> §cOnly in-game players§7 can use the §b/{1} §7command' # 0 = generated, 1 = label
+requires-argument: '§f-> §cMissing §7required argument§8: §3{2,choice,0#§o|1#§l}{1}' # 0 = generated, 1 = name, 2 = literal(0|1)
+unknown-value: '§f-> §eUnknown§7 value for §3§o{1}§8: §f{2}' # 0 = generated, 1 = name, 2 = value
+version: @VERSION@

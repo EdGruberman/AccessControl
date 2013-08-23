@@ -1,264 +1,261 @@
 package edgruberman.bukkit.accesscontrol;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
-import org.bukkit.configuration.Configuration;
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.MemoryConfiguration;
+import org.bukkit.permissions.Permission;
 
-public class Principal {
+public abstract class Principal {
 
     protected final String name;
+    protected final Set<Descriptor> permissions;
+    protected final Permission implicit;
 
-    /** &lt;World name (null for server), &lt;Permission name, granted/revoked>> */
-    protected final Map<String, Map<String, Boolean>> permissions;
+    protected final Set<Group> memberships = new LinkedHashSet<Group>();
 
-    /** &lt;World name (null for server), &lt;Group, granted/revoked>> */
-    protected final Map<String, Map<Group, Boolean>> memberships;
+    protected Authority authority;
 
-    protected final AccountManager manager;
-
-    Principal(final String name, final Map<String, Map<String, Boolean>> permissions, final Map<String, Map<Group, Boolean>> memberships, final AccountManager manager) {
+    Principal(final String name, final Set<Descriptor> permissions, final Permission implicit) {
         this.name = name;
         this.permissions = permissions;
-        this.memberships = memberships;
-        this.manager = manager;
+        this.implicit = implicit;
     }
 
-    /** recalculate associated Permissible permissions */
-    public void update() {};
-
-    /**
-     * removes Principal from saved configuration
-     * @return modified Principals as a result of removal
-     */
-    public List<Principal> delete() {
-        return this.manager.removePrincipal(this);
+    void register(final Authority authority) {
+        this.authority = authority;
+        this.resetMemberships(authority.memberships(this));
     }
 
     public String getName() {
         return this.name;
     }
 
-    /** @return direct permissions for specified world only */
-    public Map<String, Boolean> getPermissions(final String world) {
-        final Map<String, Boolean> p = this.permissions.get(world);
-        if (p == null) return Collections.emptyMap();
-        return Collections.unmodifiableMap(p);
+    /** root permission all other permissions are applied to */
+    public Permission getImplicit() {
+        return this.implicit;
     }
 
-    /** @return direct memberships for specified world only */
-    public Map<Group, Boolean> getMemberships(final String world) {
-        final Map<Group, Boolean> m = this.memberships.get(world);
-        if (m == null) return Collections.emptyMap();
-        return Collections.unmodifiableMap(m);
+    public Set<Descriptor> getPermissions() {
+        return Collections.unmodifiableSet(this.permissions);
     }
 
-    /** @return previous value or null if none */
-    public Boolean setPermission(final String permission, final boolean value, final String world) {
-        if (permission == null) throw new IllegalArgumentException("permission can not be null");
-
-        if (this.manager.isGroup(permission))
-            return this.setMembership(this.manager.createGroup(permission), value, world);
-
-        Map<String, Boolean> permissions = this.permissions.get(world);
-        if (permissions == null) {
-            permissions = new LinkedHashMap<String, Boolean>();
-            this.permissions.put(world, permissions);
-        }
-        return permissions.put(permission, value);
+    public boolean addPermissions(final Descriptor permission) {
+        return this.permissions.add(permission);
     }
 
-    /** @return previous value or null if none */
-    public Boolean unsetPermission(final String permission, final String world) {
-        if (this.manager.isGroup(permission))
-            return this.unsetMembership(this.manager.getGroup(permission), world);
-
-        final Map<String, Boolean> permissions = this.permissions.get(world);
-        if (permissions == null) return null;
-        final Boolean previous = permissions.remove(permission);
-        if (permissions.size() == 0) this.permissions.remove(world);
-        return previous;
-    }
-
-    /** @return previous value or null if none */
-    public Boolean setMembership(final Group group, final boolean value, final String world) {
-        if (group == null) throw new IllegalArgumentException("group can not be null");
-
-        Map<Group, Boolean> memberships = this.memberships.get(world);
-        if (memberships == null) {
-            memberships = new LinkedHashMap<Group, Boolean>();
-            this.memberships.put(world, memberships);
-        }
-        return memberships.put(group, value);
-    }
-
-    /** @return previous value or null if none */
-    public Boolean unsetMembership(final Group group, final String world) {
-        final Map<Group, Boolean> memberships = this.memberships.get(world);
-        if (memberships == null) return null;
-        final Boolean previous = memberships.remove(group);
-        if (memberships.size() == 0) this.memberships.remove(world);
-        return previous;
-    }
-
-    /** @return whether or not any direct memberships or direct permissions are defined */
-    public boolean hasDirect() {
-        return (this.memberships.size() > 0 || this.permissions.size() > 0);
-    }
-
-    /** @return all worlds Principal is configured for either permissions or memberships in */
-    public Set<String> worlds() {
-        final Set<String> worlds = new HashSet<String>(this.permissions.keySet());
-        worlds.addAll(this.memberships.keySet());
-        return worlds;
-    }
-
-    /** @return combined (server and world) permissions assigned to this principal itself  */
-    public Map<String, Boolean> direct(final String world, final Map<String, Boolean> append) {
-        // server
-        final Map<String, Boolean> directServer = this.permissions.get(null);
-        if (directServer != null) append.putAll(directServer);
-
-        // world overrides server
-        if (world != null) {
-            final Map<String, Boolean> directWorld = this.permissions.get(world);
-            if (directWorld != null) append.putAll(directWorld);
+    public boolean removePermissions(final Class<? extends Descriptor> type) {
+        final Iterator<Descriptor> it = this.permissions.iterator();
+        while (it.hasNext()) {
+            final Descriptor descriptor = it.next();
+            if (!descriptor.getClass().equals(type)) continue;
+            it.remove();
+            return true;
         }
 
-        return append;
+        return false;
     }
 
-    /** @return combined (server and world) permissions assigned to this principal itself */
-    public Map<String, Boolean> direct(final String world) {
-        return this.direct(world, new LinkedHashMap<String, Boolean>());
+    public void resetPermissions(final Collection<Descriptor> permissions) {
+        this.permissions.clear();
+        this.permissions.addAll(permissions);
     }
 
-    /** @return permissions assigned as a result of a group membership (children/closest override parents/farthest) */
-    public Map<String, Boolean> inherited(final String world, final Map<String, Boolean> append) {
-        for (final Group group : this.directMemberships(world)) group.permissions(world, append);
-        return append;
-    }
+    /** @return descriptor matching specified class; null if none match */
+    public Descriptor getPermissions(final Class<? extends Descriptor> type) {
+        Descriptor result = null;
 
-    /** @return permissions assigned as a result of a group membership (children/closest override parents/farthest) */
-    public Map<String, Boolean> inherited(final String world) {
-        return this.inherited(world, new LinkedHashMap<String, Boolean>());
-    }
-
-    /** @return total (inherited server, inherited world, direct server, direct world, and self [listed in order of increasing priority]) permissions */
-    public Map<String, Boolean> permissions(final String world, final Map<String, Boolean> append) {
-        this.inherited(world, append);
-        this.direct(world, append); // direct overrides inherited
-        append.put(this.name, true); // self overrides all
-        return append;
-    }
-
-    /** @return total (inherited server, inherited world, direct server, direct world, and self [listed in order of increasing priority]) permissions */
-    public Map<String, Boolean> permissions(final String world) {
-        return this.permissions(world, new LinkedHashMap<String, Boolean>());
-    }
-
-    /** @return combined (server and world) direct memberships */
-    public Set<Group> directMemberships(final String world) {
-        final Set<Group> combined = new LinkedHashSet<Group>();
-
-        // server
-        final Map<Group, Boolean> serverMemberships = this.memberships.get(null);
-        if (serverMemberships != null)
-            for (final Map.Entry<Group, Boolean> membership : serverMemberships.entrySet())
-                if (membership.getValue())
-                    combined.add(membership.getKey());
-
-        // world overrides server
-        if (world != null) {
-            final Map<Group, Boolean> worldMemberships = this.memberships.get(world);
-            if (worldMemberships != null)
-                for (final Map.Entry<Group, Boolean> membership : worldMemberships.entrySet())
-                    if (membership.getValue()) {
-                        combined.add(membership.getKey());
-                    } else {
-                        combined.remove(membership.getKey());
-                    }
+        for (final Descriptor descriptor : this.permissions) {
+            if (!descriptor.getClass().equals(type)) continue;
+            result = descriptor;
+            break;
         }
 
-        return combined;
+        return result;
     }
 
-    // TODO inheritedMemberships
-    // TODO memberships (total)
-
-    @Override
-    public String toString() {
-        return "Principal[name: " + this.name + "; memberships: [" + this.toString(this.memberships) + "]; permissions: [" + this.toString(this.permissions) + "]]";
+    /** direct memberships */
+    public Set<Group> getMemberships() {
+        return Collections.unmodifiableSet(this.memberships);
     }
 
-    private String toString(final Map<?, ?> map) {
-        final StringBuilder sb = new StringBuilder();
-        for (final Object world : map.keySet()) {
-            sb.append(( world == null ? "server" : world )).append(": [");
-            final Iterator<?> it = ((Map<?, ?>) map.get(world)).entrySet().iterator();
-            while (it.hasNext()) {
-                final Map.Entry<?, ?> entry = (Map.Entry<?, ?>) it.next();
-                sb.append(( entry.getKey() instanceof Group ? ((Group) entry.getKey()).getName() : entry.getKey().toString() ));
-                sb.append(": ").append(entry.getValue());
-                if (it.hasNext()) sb.append(", ");
-            }
-            sb.append("]");
-        }
-        return sb.toString();
+    public boolean addMembership(final Group membership) {
+        return this.memberships.add(membership);
     }
 
-    public Configuration toConfiguration() {
-        final Configuration config = new MemoryConfiguration();
-        config.options().pathSeparator(Main.CONFIG_PATH_SEPARATOR);
-
-        for (final Map.Entry<String, Map<Group, Boolean>> world : this.memberships.entrySet()) {
-            final String path = ( world.getKey() == null ? "server" : "worlds" + config.options().pathSeparator() + world.getKey() );
-            final ConfigurationSection section = ( config.contains(path) ? config.getConfigurationSection(path) : config.createSection(path) );
-            for (final Map.Entry<Group, Boolean> membership : world.getValue().entrySet())
-                section.set(membership.getKey().getName(), membership.getValue());
-        }
-
-        for (final Map.Entry<String, Map<String, Boolean>> world : this.permissions.entrySet()) {
-            final String path = ( world.getKey() == null ? "server" : "worlds" + config.options().pathSeparator() + world.getKey() );
-            final ConfigurationSection section = ( config.contains(path) ? config.getConfigurationSection(path) : config.createSection(path) );
-            for (final Map.Entry<String, Boolean> permission : world.getValue().entrySet())
-                section.set(permission.getKey(), permission.getValue());
-        }
-
-        return config;
+    public boolean removeMembership(final Group membership) {
+        return this.memberships.remove(membership);
     }
 
-
-
-    // TODO builder pattern that only returns a builder for sub-classes to clone and build further and use setPerm/Memb
-    protected static void separate(final AccountManager manager, final ConfigurationSection config, final Map<String, Map<String, Boolean>> permissions, final Map<String, Map<Group, Boolean>> memberships) {
-        final ConfigurationSection server = config.getConfigurationSection("server");
-        if (server != null) Principal.separate(manager, null, server, permissions, memberships);
-
-        final ConfigurationSection worlds = config.getConfigurationSection("worlds");
-        if (worlds != null)
-            for (final String world : worlds.getKeys(false))
-                Principal.separate(manager, world, worlds.getConfigurationSection(world), permissions, memberships);
+    /** clear direct memberships and replace with supplied memberships */
+    public void resetMemberships(final Collection<Group> memberships) {
+        this.memberships.clear();
+        this.memberships.addAll(memberships);
     }
 
-    private static void separate(final AccountManager manager, final String world, final ConfigurationSection entries, final Map<String, Map<String, Boolean>> permissions, final Map<String, Map<Group, Boolean>> memberships) {
-        for (final String key : entries.getKeys(false)) {
-            if (manager.isGroup(key)) {
-                if (!memberships.containsKey(world)) memberships.put(world, new LinkedHashMap<Group, Boolean>());
-                memberships.get(world).put(manager.createGroup(key), (Boolean) entries.get(key));
-            } else {
-                if (!permissions.containsKey(world)) permissions.put(world, new LinkedHashMap<String, Boolean>());
-                permissions.get(world).put(key, (Boolean) entries.get(key));
+    /** calculate resultant memberships; farthest inherited first to closest inherited, then direct last */
+    public List<Group> memberships() {
+        final List<Group> result = new ArrayList<Group>();
+
+        // inherited memberships
+        for (final Group direct : this.memberships) {
+            for (final Group inherited : direct.memberships()) {
+                // ensure group is last entry in list to allow for closer group assignments to override by being applied as late as possible
+                result.remove(inherited);
+                result.add(inherited);
             }
         }
+
+        // direct memberships
+        for (final Group direct : this.memberships) {
+            if (result.contains(direct)) continue;
+            result.add(direct);
+        }
+
+        return result;
+    }
+
+    /** calculate resultant permissions; farthest inherited first to closest inherited, then direct */
+    public Map<String, Boolean> permissions(final Context context) {
+        final Map<String, Boolean> result = new LinkedHashMap<String, Boolean>();
+
+        // inherited
+        for (final Group inherited : this.memberships()) {
+            inherited.permissionsDirect(context, result);
+        }
+
+        // direct
+        this.permissionsDirect(context, result);
+
+        return result;
+    }
+
+    protected void permissionsDirect(final Context context, final Map<String, Boolean> result) {
+        // direct
+        for (final Descriptor descriptor : this.permissions) {
+            result.putAll(context.permissions(descriptor));
+        }
+
+        // implicit
+        result.put(this.implicit.getName(), true);
+    }
+
+    /** calculate assignments related to permission; farthest inherited first to closest inherited, then direct */
+    public List<PermissionAssignment> trace(final Context context, final String permission) {
+        final List<PermissionAssignment> result = new ArrayList<PermissionAssignment>();
+
+        // inherited
+        for (final Group inherited : this.memberships()) {
+            inherited.traceDirect(context, permission, result);
+        }
+
+        // direct
+        this.traceDirect(context, permission, result);
+
+        // implicit
+        if (this.implicit.getName().equals(permission)) {
+            result.add(new PermissionAssignment(this, true));
+        }
+
+        return result;
+    }
+
+    protected void traceDirect(final Context context, final String permission, final List<PermissionAssignment> result) {
+        for (final Descriptor descriptor : this.permissions) {
+            for (final Map.Entry<String, Boolean> entry : context.permissions(descriptor).entrySet()) {
+                if (entry.getKey().equals(permission)) {
+                    result.add(new PermissionAssignment(this, entry.getValue()));
+                    break;
+                }
+            }
+        }
+    }
+
+    public void delete() {
+        this.authority.deletePrincipal(this);
+    }
+
+    /** save changes to repository, will delete from repository if not persistent */
+    public void save() {
+        this.authority.savePrincipal(this);
+    }
+
+    /** recalculate and assign permissions for online players for context */
+    public abstract void apply();
+
+    /** @return true if this should be saved to repository */
+    public abstract boolean isPersistent();
+
+
+
+    public static class PermissionAssignment {
+
+        private final Principal source;
+        private final Boolean value;
+
+        PermissionAssignment(final Principal source, final Boolean value) {
+            this.source = source;
+            this.value = value;
+        }
+
+        public Principal getSource() {
+            return this.source;
+        }
+
+        public Boolean getValue() {
+            return this.value;
+        }
+
+    }
+
+
+
+    public abstract static class Factory<F> {
+
+        protected final Set<Descriptor> permissions;
+
+        protected String name = null;
+        protected Permission implicit = null;
+
+        protected Factory(final Comparator<Descriptor> sorter) {
+            this.permissions = new TreeSet<Descriptor>(sorter);
+        }
+
+        @SuppressWarnings("unchecked")
+        public F setName(final String name) {
+            this.name = name;
+            return (F) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public F setImplicit(final Permission implicit) {
+            this.implicit = implicit;
+            return (F) this;
+        }
+
+        @SuppressWarnings("unchecked")
+        public F addPermissions(final Collection<Descriptor> descriptors) {
+            this.permissions.addAll(descriptors);
+            return (F) this;
+        }
+
+        public abstract Principal build();
+
+        /** reverts factory to defaults */
+        public void reset() {
+            this.name = null;
+            this.implicit = null;
+            this.permissions.clear();
+        }
+
     }
 
 }

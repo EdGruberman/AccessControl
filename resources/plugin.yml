@@ -1,170 +1,76 @@
 name: AccessControl
 version: @VERSION@
-description: Native Bukkit permission management
+description: Permission and group management
 author: EdGruberman (ed@rjump.com)
 website: http://github.com/EdGruberman/AccessControl
 main: edgruberman.bukkit.accesscontrol.Main
 commands:
   'accesscontrol:check':
-    aliases: [accesscontrol.check, check]
-    description: Calculates the value of a permission
+    aliases: [check]
+    description: Shows current value of permission for player
     permission: accesscontrol.check
-    usage: '§f-> §7Usage: §b/<command> §o<Permission>§b[ §o<Player>§b]'
-  'accesscontrol:principal':
-    aliases: [accesscontrol.principal, principal]
-    description: Show direct settings for a principal
-    permission: accesscontrol.principal
-    usage: '§f-> §7Usage: §b/<command>[ §o<Principal>§b]'
-  'accesscontrol:references':
-    aliases: [accesscontrol.references, references]
-    description: Show principals with direct references to a permission
-    permission: accesscontrol.references
-    usage: '§f-> §7Usage: §b/<command> §o<Permission>'
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oplayer§3]'
+  'accesscontrol:effective':
+    aliases: [effective]
+    description: List all permissions and current values for player
+    permission: accesscontrol.effective
+    usage: '§f-> §7Usage: §b/<command> §3[§opage§3] [§oplayer§3] [§omatch§3]'
+  'accesscontrol:trace':
+    aliases: [trace]
+    description: Configured assignments of permission for principal
+    permission: accesscontrol.trace
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+  'accesscontrol:default':
+    aliases: [default]
+    description: Shows default value of permission for player
+    permission: accesscontrol.default
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oplayer§3]'
+  'accesscontrol:deny':
+    aliases: [deny]
+    description: Set direct permission entry as false
+    permission: accesscontrol.deny
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+  'accesscontrol:grant':
+    aliases: [grant]
+    description: Set direct permission entry as true
+    permission: accesscontrol.grant
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+  'accesscontrol:revoke':
+    aliases: [revoke]
+    description: Remove direct permission entry
+    permission: accesscontrol.revoke
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
   'accesscontrol:reload':
     description: Reload AccessControl plugin
     permission: accesscontrol.reload
     usage: '§f-> §7Usage: §b/<command>'
-  'accesscontrol:create':
-    aliases: [accesscontrol.create, create]
-    description: Create a new group
-    permission: accesscontrol.create
-    usage: '§f-> §7Usage: §b/<command>[ §o<Group>§b[ §o<Description>§b]]'
-  'accesscontrol:creator':
-    aliases: [accesscontrol.creator, creator]
-    description: List groups created by player
-    permission: accesscontrol.creator
-    usage: '§f-> §7Usage: §b/<command>[ §o<Player>§b]'
-  'accesscontrol:members':
-    aliases: [accesscontrol.members, members, group]
-    description: List principals in a group
-    permission: accesscontrol.members
-    usage: '§f-> §7Usage: §b/<command>[ §o<Group>§b]'
-  'accesscontrol:add':
-    aliases: [accesscontrol.add, add]
-    description: Set direct membership entry to true *Requires group controller
-    permission: accesscontrol.add
-    usage: '§f-> §7Usage: §b/<command> §o<Group> <Player>'
-  'accesscontrol:exclude':
-    aliases: [accesscontrol.exclude, exclude]
-    description: Set direct membership entry to false *Requires group controller
-    permission: accesscontrol.exclude
-    usage: '§f-> §7Usage: §b/<command> §o<Group> <Player>'
-  'accesscontrol:remove':
-    aliases: [accesscontrol.remove, remove]
-    description: Remove direct membership entry *Requires group controller
-    permission: accesscontrol.remove
-    usage: '§f-> §7Usage: §b/<command> §o<Group> <Player>'
-  'accesscontrol:demote':
-    aliases: [accesscontrol.demote, demote]
-    description: Remove group controller status from member *Requires group controller
-    permission: accesscontrol.demote
-    usage: '§f-> §7Usage: §b/<command> §o<Group> <Player>'
-  'accesscontrol:promote':
-    aliases: [accesscontrol.promote, promote]
-    description: Give group controller status to player *Requires group controller
-    permission: accesscontrol.promote
-    usage: '§f-> §7Usage: §b/<command> §o<Group> <Player>'
-  'accesscontrol:destroy':
-    aliases: [accesscontrol.destroy, destroy]
-    description: Delete group *Requires group controller
-    permission: accesscontrol.destroy
-    usage: '§f-> §7Usage: §b/<command> §o<Group>§b[ confirm]'
-  'accesscontrol:deny':
-    aliases: [accesscontrol.deny, deny]
-    description: Set direct permission entry as false
-    permission: accesscontrol.deny
-    usage: '§f-> §7Usage: §b/<command> §o<Permission>§b[ §o<Player>§b]'
-  'accesscontrol:grant':
-    aliases: [accesscontrol.grant, grant]
-    description: Set direct permission entry as true
-    permission: accesscontrol.grant
-    usage: '§f-> §7Usage: §b/<command> §o<Permission>§b[ §o<Player>§b]'
-  'accesscontrol:revoke':
-    aliases: [accesscontrol.revoke, revoke]
-    description: Remove direct permission entry
-    permission: accesscontrol.revoke
-    usage: '§f-> §7Usage: §b/<command> §o<Permission>§b[ §o<Player>§b]'
 permissions:
+  accesscontrol.user:
+    description: Can use basic features
+    default: true
   accesscontrol.admin:
     description: Can use all features
     default: op
     children:
-      accesscontrol.user: true
       accesscontrol.check: true
-      accesscontrol.override: true      
-      accesscontrol.principal: true
-      accesscontrol.references: true
-      accesscontrol.reload: true
-      accesscontrol.exclude: true
+      accesscontrol.effective: true
+      accesscontrol.trace: true
+      accesscontrol.default: true
       accesscontrol.deny: true
       accesscontrol.grant: true
       accesscontrol.revoke: true
-  accesscontrol.user:
-    description: Can use basic features
-    default: true
-    children:
-      accesscontrol.members: true
-      accesscontrol.create: true
-      accesscontrol.creator: true
-      accesscontrol.add: true
-      accesscontrol.remove: true
-      accesscontrol.promote: true
-      accesscontrol.demote: true
-      accesscontrol.destroy: true
-  accesscontrol.override:
-    description: Can use all features that require additional permissions
-    default: false
-    children:
-      accesscontrol.override.controller: true
-      accesscontrol.override.create: true
-      accesscontrol.override.private: true
-  accesscontrol.override.controller:
-    description: Can use all group related features even if not group controller
-    default: false
-  accesscontrol.override.private:
-    description: Can view group members in any group
-    default: false
-  accesscontrol.override.create:
-    description: Can create more groups that configured maximum
-    default: false
+      accesscontrol.reload: true
   accesscontrol.check:
     description: Can use check command
     default: false
-  accesscontrol.principal:
-    description: Can use principal command
+  accesscontrol.effective:
+    description: Can use effective command
     default: false
-  accesscontrol.references:
-    description: Can use references command
+  accesscontrol.trace:
+    description: Can use trace command
     default: false
-  accesscontrol.reload:
-    description: Can use reload command
-    default: false
-  accesscontrol.create:
-    description: Can use create command
-    default: false
-  accesscontrol.creator:
-    description: Can use creator command
-    default: false
-  accesscontrol.members:
-    description: Can use members command
-    default: false
-  accesscontrol.add:
-    description: Can use add command
-    default: false
-  accesscontrol.exclude:
-    description: Can use exclude command
-    default: false
-  accesscontrol.remove:
-    description: Can use remove command
-    default: false
-  accesscontrol.promote:
-    description: Can use promote command
-    default: false
-  accesscontrol.demote:
-    description: Can use demote command
-    default: false
-  accesscontrol.destroy:
-    description: Can use destroy command
+  accesscontrol.default:
+    description: Can use default command
     default: false
   accesscontrol.deny:
     description: Can use deny command
@@ -174,4 +80,7 @@ permissions:
     default: false
   accesscontrol.revoke:
     description: Can use revoke command
+    default: false
+  accesscontrol.reload:
+    description: Can use reload command
     default: false

@@ -3,20 +3,22 @@ package edgruberman.bukkit.accesscontrol.commands;
 import java.util.List;
 import java.util.Locale;
 
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.PermissionAttachmentInfo;
+import org.bukkit.permissions.Permission;
+import org.bukkit.permissions.PermissionDefault;
 
 import edgruberman.bukkit.accesscontrol.Main;
 import edgruberman.bukkit.accesscontrol.util.TokenizedExecutor;
 
-public class Check extends TokenizedExecutor {
+public class Default extends TokenizedExecutor {
 
     private final Server server;
 
-    public Check(final Server server) {
+    public Default(final Server server) {
         this.server = server;
     }
 
@@ -33,24 +35,16 @@ public class Check extends TokenizedExecutor {
             return false;
         }
 
-        final String permission = args.get(0).toLowerCase(Locale.ENGLISH);
         final String name = ( args.size() >= 2 ? args.get(1) : sender.getName() );
-        final Player player = this.server.getPlayer(name);
-        if (player == null) {
-            Main.courier.send(sender, "unknown-value", "player", name);
-            return false;
-        }
+        final OfflinePlayer player = this.server.getOfflinePlayer(name);
 
-        String source = null;
-        for (final PermissionAttachmentInfo info : player.getEffectivePermissions()) {
-            if (info.getPermission().equals(permission)) {
-                source = ( info.getAttachment() != null ? info.getAttachment().getPlugin().getName() : this.server.getName() );
-                break;
-            }
-        }
-        if (source == null) source = this.server.getName();
+        final String permission = args.get(0).toLowerCase(Locale.ENGLISH);
+        final Permission instance = this.server.getPluginManager().getPermission(permission);
+        final PermissionDefault defaultPermission = ( instance != null ? instance.getDefault() : Permission.DEFAULT_PERMISSION );
 
-        Main.courier.send(sender, "check", permission, player.getName(), player.hasPermission(permission)?1:0, player.isPermissionSet(permission)?1:0, source);
+        final boolean result = defaultPermission.getValue(player.isOp());
+        Main.courier.send(sender, "default", permission, player.getName(), result?1:0, defaultPermission.name(), ( instance != null ? 1 : 0 ));
+
         return true;
     }
 

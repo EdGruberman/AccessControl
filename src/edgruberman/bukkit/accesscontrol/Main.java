@@ -3,101 +3,116 @@ package edgruberman.bukkit.accesscontrol;
 import java.io.File;
 import java.util.logging.Level;
 
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.configuration.Configuration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
 
+import edgruberman.bukkit.accesscontrol.Registrar.DescriptorRegistrationEvent;
 import edgruberman.bukkit.accesscontrol.commands.Check;
-import edgruberman.bukkit.accesscontrol.commands.References;
+import edgruberman.bukkit.accesscontrol.commands.Default;
+import edgruberman.bukkit.accesscontrol.commands.Deny;
+import edgruberman.bukkit.accesscontrol.commands.Effective;
+import edgruberman.bukkit.accesscontrol.commands.Grant;
 import edgruberman.bukkit.accesscontrol.commands.Reload;
-import edgruberman.bukkit.accesscontrol.commands.group.Create;
-import edgruberman.bukkit.accesscontrol.commands.group.Creator;
-import edgruberman.bukkit.accesscontrol.commands.group.Members;
-import edgruberman.bukkit.accesscontrol.commands.group.controller.Add;
-import edgruberman.bukkit.accesscontrol.commands.group.controller.Demote;
-import edgruberman.bukkit.accesscontrol.commands.group.controller.Destroy;
-import edgruberman.bukkit.accesscontrol.commands.group.controller.Promote;
-import edgruberman.bukkit.accesscontrol.commands.group.controller.Remove;
-import edgruberman.bukkit.accesscontrol.commands.permission.Deny;
-import edgruberman.bukkit.accesscontrol.commands.permission.Grant;
-import edgruberman.bukkit.accesscontrol.commands.permission.Revoke;
-import edgruberman.bukkit.accesscontrol.messaging.ConfigurationCourier;
+import edgruberman.bukkit.accesscontrol.commands.Revoke;
+import edgruberman.bukkit.accesscontrol.commands.Trace;
+import edgruberman.bukkit.accesscontrol.descriptors.Server;
+import edgruberman.bukkit.accesscontrol.descriptors.World;
+import edgruberman.bukkit.accesscontrol.descriptors.World.WorldChangeMonitor;
+import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
+import edgruberman.bukkit.accesscontrol.repositories.YamlRepository;
 import edgruberman.bukkit.accesscontrol.util.CustomPlugin;
 
-public final class Main extends CustomPlugin {
-
-    public static final Character CONFIG_PATH_SEPARATOR = '¯';
+public final class Main extends CustomPlugin implements Listener {
 
     public static ConfigurationCourier courier;
 
-    private static AccountManager manager;
+    private static Authority authority = null;
 
-    /** used for deserialization */
-    static AccountManager getDefaultAccountManager() {
-        return Main.manager;
+    public static Authority getAuthority() {
+        return Main.authority;
     }
 
 
 
+    private Listener worldDescriptor = null;
+
     @Override
-    public void onLoad() { this.putConfigMinimum("7.0.1a107"); }
+    public void onLoad() {
+        this.putConfigMinimum("8.0.0a0");
+        this.putConfigMinimum("language.yml", "8.0.0b7");
+    }
 
     @Override
     public void onEnable() {
         this.reloadConfig();
-        Main.courier = ConfigurationCourier.create(this).setPath("language").setColorCode("color-code").build();
+        Main.courier = ConfigurationCourier.Factory.create(this).setBase(this.loadConfig("language.yml")).setFormatCode("format-code").build();
 
-        Main.manager = new AccountManager(this, this.getConfig().getString("group-name-build"), this.getConfig().getString("group-name-match"), this.getConfig().getInt("group-name-length"));
-        Main.manager.load(this.loadConfig("users.yml", Main.CONFIG_PATH_SEPARATOR, null), this.loadConfig("groups.yml", Main.CONFIG_PATH_SEPARATOR, null));
-        Bukkit.getPluginManager().registerEvents(Main.manager, this);
-        this.getLogger().log(Level.CONFIG, "Loaded {0} groups and {1} users", new Object[] { Main.manager.groups.size(), Main.manager.users.size() });
+        // descriptor registrar
+        this.getServer().getPluginManager().registerEvents(this, this);
+        final Registrar registrar = new Registrar(this, this.getConfig().getStringList("permission-order"));
 
-        // general commands
-        this.getCommand("accesscontrol:check").setExecutor(new Check(this, Main.manager));
-        this.getCommand("accesscontrol:principal").setExecutor(new edgruberman.bukkit.accesscontrol.commands.Principal(Main.manager));
-        this.getCommand("accesscontrol:references").setExecutor(new References(Main.manager));
-        this.getCommand("accesscontrol:reload").setExecutor(new Reload(this));
+        // repository
+        final String implicitUser = this.getConfig().getConfigurationSection("implicit-permission").getString("user");
+        final String implicitGroup = this.getConfig().getConfigurationSection("implicit-permission").getString("group");
+        final File users = new File(this.getDataFolder(), "users.yml");
+        final File groups = new File(this.getDataFolder(), "groups.yml");
+        Repository repository;
+        try {
+            repository = new YamlRepository(this, users, groups, registrar.getRegistrations(), registrar.getSorter(), this.getServer().getPluginManager(), implicitUser, implicitGroup);
+        } catch (final InvalidConfigurationException e) {
+            this.setEnabled(false);
+            this.getLogger().log(Level.SEVERE, "Disabling plugin; Unable to load repository: " + e);
+            this.getLogger().log(Level.FINE, "Exception detail", e);
+            return;
+        }
 
-        // group commands
-        final CommandExecutor creator = new Creator(Main.manager, this.getConfig().getInt("group-create-max"));
-        this.getCommand("accesscontrol:creator").setExecutor(creator);
-        this.getCommand("accesscontrol:create").setExecutor(new Create(this, Main.manager, this.getConfig().getInt("group-create-max"), creator));
-        this.getCommand("accesscontrol:members").setExecutor(new Members(Main.manager, creator));
+        // authority
+        Main.authority = new Authority(this, repository, registrar.getSorter(), implicitUser, implicitGroup, this.getConfig().getStringList("default-groups"));
+        this.getServer().getPluginManager().registerEvents(Main.authority, this);
+        this.getLogger().log(Level.CONFIG, "Loaded {0} groups and {1} users", new Object[] { Main.authority.getGroups().size(), Main.authority.getUsers().size() });
 
-        // restricted group controller commands
-        this.getCommand("accesscontrol:add").setExecutor(new Add(this, Main.manager));
-        this.getCommand("accesscontrol:demote").setExecutor(new Demote(this, Main.manager));
-        this.getCommand("accesscontrol:destroy").setExecutor(new Destroy(this, Main.manager));
-        this.getCommand("accesscontrol:promote").setExecutor(new Promote(this, Main.manager));
-        this.getCommand("accesscontrol:remove").setExecutor(new Remove(this, Main.manager));
+        // analysis commands
+        this.getCommand("accesscontrol:check").setExecutor(new Check(this.getServer()));
+        this.getCommand("accesscontrol:effective").setExecutor(new Effective(this.getServer()));
+        this.getCommand("accesscontrol:trace").setExecutor(new Trace(Main.authority, registrar.registrations(), this.getServer()));
+        this.getCommand("accesscontrol:default").setExecutor(new Default(this.getServer()));
 
         // permission commands
-        this.getCommand("accesscontrol:deny").setExecutor(new Deny(this, Main.manager));
-        this.getCommand("accesscontrol:grant").setExecutor(new Grant(this, Main.manager));
-        this.getCommand("accesscontrol:revoke").setExecutor(new Revoke(this, Main.manager));
+        this.getCommand("accesscontrol:deny").setExecutor(new Deny(Main.authority, registrar.registrations()));
+        this.getCommand("accesscontrol:grant").setExecutor(new Grant(Main.authority, registrar.registrations()));
+        this.getCommand("accesscontrol:revoke").setExecutor(new Revoke(Main.authority, registrar.registrations()));
+
+        // general commands
+        this.getCommand("accesscontrol:reload").setExecutor(new Reload(this));
     }
 
     @Override
     public void onDisable() {
-        Main.manager.clear(); Main.manager = null;
+        HandlerList.unregisterAll((Listener) this);
+
+        HandlerList.unregisterAll(this.worldDescriptor);
+        this.worldDescriptor = null;
+
+        if (Main.authority != null) {
+            HandlerList.unregisterAll(Main.authority);
+            Main.authority.release();
+            Main.authority = null;
+        }
+
         Main.courier = null;
     }
 
-    public void save() {
-        this.saveConfig("users.yml", Main.manager.toConfigurationUsers());
-        this.saveConfig("groups.yml", Main.manager.toConfigurationGroups());
-    }
+    @EventHandler
+    public void onDescriptorRegistration(final DescriptorRegistrationEvent registration) {
+        // server permissions
+        registration.register("server", Server.class, new Server.Factory(), Server.ARGUMENT_COUNT);
 
-    private void saveConfig(final String fileName, final Configuration config) {
-        final YamlConfiguration yaml = new YamlConfiguration();
-        for (final String key : config.getKeys(false)) yaml.set(key, config.get(key));
-        final File configFile = new File(this.getDataFolder(), fileName);
-        try {
-            yaml.save(configFile);
-        } catch (final Exception e) {
-            this.getLogger().severe("Unable to save configuration file: " + configFile.getPath() + "; " + e);
-        }
+        // world permissions
+        this.worldDescriptor = new WorldChangeMonitor();
+        this.getServer().getPluginManager().registerEvents(this.worldDescriptor, this);
+        registration.register("world", World.class, new World.Factory(), World.ARGUMENT_COUNT);
     }
 
 }
