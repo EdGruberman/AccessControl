@@ -59,7 +59,7 @@ public interface Context {
                     // use next section as last index, end of list if no more
                     final int to = ( i + 1 < sections.size() ?  sections.get(i + 1).index : arguments.size() );
 
-                    section.arguments = arguments.subList(section.index, to);
+                    section.arguments = arguments.subList(section.index + 1, to);
 
                     this.sections.add(section);
                     this.sectionsByType.put(section.registration.getImplementation(), section);
