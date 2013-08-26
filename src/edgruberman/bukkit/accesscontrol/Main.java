@@ -18,8 +18,9 @@ import edgruberman.bukkit.accesscontrol.commands.Reload;
 import edgruberman.bukkit.accesscontrol.commands.Revoke;
 import edgruberman.bukkit.accesscontrol.commands.Trace;
 import edgruberman.bukkit.accesscontrol.descriptors.Server;
+import edgruberman.bukkit.accesscontrol.descriptors.Server.ServerPermissionApplicator;
 import edgruberman.bukkit.accesscontrol.descriptors.World;
-import edgruberman.bukkit.accesscontrol.descriptors.World.WorldChangeMonitor;
+import edgruberman.bukkit.accesscontrol.descriptors.World.WorldPermissionApplicator;
 import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 import edgruberman.bukkit.accesscontrol.repositories.YamlRepository;
 import edgruberman.bukkit.accesscontrol.util.CustomPlugin;
@@ -36,7 +37,8 @@ public final class Main extends CustomPlugin implements Listener {
 
 
 
-    private Listener worldDescriptor = null;
+    private Listener serverApplicator = null;
+    private Listener worldApplicator = null;
 
     @Override
     public void onLoad() {
@@ -92,8 +94,11 @@ public final class Main extends CustomPlugin implements Listener {
     public void onDisable() {
         HandlerList.unregisterAll((Listener) this);
 
-        HandlerList.unregisterAll(this.worldDescriptor);
-        this.worldDescriptor = null;
+        HandlerList.unregisterAll(this.worldApplicator);
+        this.worldApplicator = null;
+
+        HandlerList.unregisterAll(this.serverApplicator);
+        this.serverApplicator = null;
 
         if (Main.authority != null) {
             HandlerList.unregisterAll(Main.authority);
@@ -107,12 +112,14 @@ public final class Main extends CustomPlugin implements Listener {
     @EventHandler
     public void onDescriptorRegistration(final DescriptorRegistrationEvent registration) {
         // server permissions
-        registration.register("server", Server.class, new Server.Factory(), Server.ARGUMENT_COUNT);
+        this.serverApplicator = new ServerPermissionApplicator();
+        this.getServer().getPluginManager().registerEvents(this.serverApplicator, this);
+        registration.register("server", Server.class, new Server.Factory(), Server.MINIMUM_ARGUMENTS);
 
         // world permissions
-        this.worldDescriptor = new WorldChangeMonitor();
-        this.getServer().getPluginManager().registerEvents(this.worldDescriptor, this);
-        registration.register("world", World.class, new World.Factory(), World.ARGUMENT_COUNT);
+        this.worldApplicator = new WorldPermissionApplicator();
+        this.getServer().getPluginManager().registerEvents(this.worldApplicator, this);
+        registration.register("world", World.class, new World.Factory(), World.MINIMUM_ARGUMENTS);
     }
 
 }

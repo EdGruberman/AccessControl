@@ -35,7 +35,11 @@ public final class User extends Principal {
     public void apply() {
         final OfflinePlayer player = this.getPlayer();
         if (!player.isOnline()) return;
+        this.apply(player);
+    }
 
+    /** used during login events where the player is not fully online yet */
+    public void apply(final OfflinePlayer player) {
         this.implicit.getChildren().clear();
         this.implicit.getChildren().putAll(this.permissions(new PlayerContext(player)));
         this.implicit.getChildren().remove(this.implicit.getName());

@@ -5,13 +5,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerLoginEvent;
 
+import edgruberman.bukkit.accesscontrol.Authority;
 import edgruberman.bukkit.accesscontrol.Descriptor;
 
 /** always applicable independent of context, no arguments */
 public class Server extends Descriptor {
 
-    public static final int ARGUMENT_COUNT = 0;
+    public static final int MINIMUM_ARGUMENTS = 0;
 
     protected final Map<String, Boolean> permissions;
 
@@ -61,5 +66,15 @@ public class Server extends Descriptor {
 
     }
 
+
+
+    public static class ServerPermissionApplicator implements Listener {
+
+        @EventHandler(priority = EventPriority.LOW) // before most other plugins assess permissions at NORMAL
+        public void onPlayerLogin(final PlayerLoginEvent login) {
+            Authority.get().createUser(login.getPlayer()).apply(login.getPlayer());
+        }
+
+    }
 
 }

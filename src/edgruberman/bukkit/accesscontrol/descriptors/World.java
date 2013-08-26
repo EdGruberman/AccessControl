@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -18,7 +19,7 @@ import edgruberman.bukkit.accesscontrol.Descriptor;
 /** single argument of world name */
 public class World extends Descriptor {
 
-    public static final int ARGUMENT_COUNT = 1;
+    public static final int MINIMUM_ARGUMENTS = 1;
 
     /** world, permission, value */
     protected Map<String, Map<String, Boolean>> permissions;
@@ -36,7 +37,7 @@ public class World extends Descriptor {
 
     @Override
     public Map<String, Boolean> permissions(final List<String> context) {
-        if (context == null || context.size() < World.ARGUMENT_COUNT) return Collections.emptyMap();
+        if (context == null || context.size() < World.MINIMUM_ARGUMENTS) return Collections.emptyMap();
         final Map<String, Boolean> result =  this.permissions.get(context.get(0).toLowerCase(Locale.ENGLISH));
         return ( result != null ? result : Collections.<String, Boolean>emptyMap() );
     }
@@ -105,16 +106,16 @@ public class World extends Descriptor {
 
 
 
-    public static class WorldChangeMonitor implements Listener {
+    public static class WorldPermissionApplicator implements Listener {
 
-        @EventHandler
+        @EventHandler(priority = EventPriority.LOW) // before most other plugins assess permissions at NORMAL
         public void onPlayerJoin(final PlayerJoinEvent join) {
-            Authority.get().getUser(join.getPlayer()).apply();
+            Authority.get().createUser(join.getPlayer()).apply(join.getPlayer());
         }
 
-        @EventHandler
+        @EventHandler(priority = EventPriority.LOW) // before most other plugins assess permissions at NORMAL
         public void onPlayerChangedWorld(final PlayerChangedWorldEvent change) {
-            Authority.get().getUser(change.getPlayer()).apply();
+            Authority.get().createUser(change.getPlayer()).apply(change.getPlayer());
         }
 
     }

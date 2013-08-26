@@ -16,7 +16,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
@@ -147,6 +146,10 @@ public final class Authority implements Listener {
         return result;
     }
 
+    public User createUser(final Player player) {
+        return this.createUser(player.getName().toLowerCase(Locale.ENGLISH));
+    }
+
     public User createUser(final String name) {
         User result = this.getUser(name);
         if (result != null) return result;
@@ -188,12 +191,6 @@ public final class Authority implements Listener {
         } else {
             this.repository.save(principal);
         }
-    }
-
-    @EventHandler(priority = EventPriority.LOW) // before most others to have permissions assigned
-    public void onPlayerLogin(final PlayerLoginEvent login) {
-        final String name = login.getPlayer().getName().toLowerCase(Locale.ENGLISH);
-        this.createUser(name).apply();
     }
 
     /** clean-up permission attachment when player leaves server */
