@@ -1,6 +1,8 @@
 package edgruberman.bukkit.accesscontrol;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -18,9 +20,7 @@ import edgruberman.bukkit.accesscontrol.commands.Reload;
 import edgruberman.bukkit.accesscontrol.commands.Revoke;
 import edgruberman.bukkit.accesscontrol.commands.Trace;
 import edgruberman.bukkit.accesscontrol.descriptors.Server;
-import edgruberman.bukkit.accesscontrol.descriptors.Server.ServerPermissionApplicator;
 import edgruberman.bukkit.accesscontrol.descriptors.World;
-import edgruberman.bukkit.accesscontrol.descriptors.World.WorldPermissionApplicator;
 import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 import edgruberman.bukkit.accesscontrol.repositories.YamlRepository;
 import edgruberman.bukkit.accesscontrol.util.CustomPlugin;
@@ -37,8 +37,7 @@ public final class Main extends CustomPlugin implements Listener {
 
 
 
-    private Listener serverApplicator = null;
-    private Listener worldApplicator = null;
+    private final List<Listener> applicators = new ArrayList<Listener>();
 
     @Override
     public void onLoad() {
@@ -92,34 +91,37 @@ public final class Main extends CustomPlugin implements Listener {
 
     @Override
     public void onDisable() {
-        HandlerList.unregisterAll((Listener) this);
-
-        HandlerList.unregisterAll(this.worldApplicator);
-        this.worldApplicator = null;
-
-        HandlerList.unregisterAll(this.serverApplicator);
-        this.serverApplicator = null;
-
         if (Main.authority != null) {
             HandlerList.unregisterAll(Main.authority);
             Main.authority.release();
             Main.authority = null;
         }
 
+        HandlerList.unregisterAll((Listener) this);
+
         Main.courier = null;
     }
 
     @EventHandler
     public void onDescriptorRegistration(final DescriptorRegistrationEvent registration) {
-        // server permissions
-        this.serverApplicator = new ServerPermissionApplicator();
-        this.getServer().getPluginManager().registerEvents(this.serverApplicator, this);
         registration.register("server", Server.class, new Server.Factory(), Server.MINIMUM_ARGUMENTS);
-
-        // world permissions
-        this.worldApplicator = new WorldPermissionApplicator();
-        this.getServer().getPluginManager().registerEvents(this.worldApplicator, this);
         registration.register("world", World.class, new World.Factory(), World.MINIMUM_ARGUMENTS);
     }
 
+    @EventHandler
+    public void onAuthorityInitialize(final Authority.InitializeEvent intialization) {
+        final Listener serverApplicator = new Server.PermissionApplicator(intialization.getAuthority());
+        this.getServer().getPluginManager().registerEvents(serverApplicator, this);
+        this.applicators.add(serverApplicator);
+
+        final Listener worldApplicator = new World.PermissionApplicator(intialization.getAuthority());
+        this.getServer().getPluginManager().registerEvents(worldApplicator, this);
+        this.applicators.add(worldApplicator);
+    }
+
+    @EventHandler
+    public void onAuthorityRelease(final Authority.ReleaseEvent release) {
+        for (final Listener listener : this.applicators) HandlerList.unregisterAll(listener);
+        this.applicators.clear();
+    }
 }

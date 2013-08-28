@@ -105,7 +105,7 @@ public class Registrar {
             return this.factory;
         }
 
-        int getMinimumArguments() {
+        public int getMinimumArguments() {
             return this.minimumArguments;
         }
 
@@ -113,7 +113,7 @@ public class Registrar {
 
 
 
-    /** dependent plugins can register their custom descriptors in this event */
+    /** custom descriptor plugins can register their custom descriptors in this event */
     public static class DescriptorRegistrationEvent extends Event {
 
         private final Authority authority;

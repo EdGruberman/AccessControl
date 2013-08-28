@@ -9,7 +9,6 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 
 import edgruberman.bukkit.accesscontrol.Authority;
-import edgruberman.bukkit.accesscontrol.Context.CommandContext;
 import edgruberman.bukkit.accesscontrol.Main;
 import edgruberman.bukkit.accesscontrol.Principal;
 import edgruberman.bukkit.accesscontrol.Principal.PermissionAssignment;
@@ -27,7 +26,7 @@ public class Trace extends PermissionExecutor {
 
     // usage: /<command> permission [name] [type] [context]
     @Override
-    public boolean execute(final CommandSender sender, final String permission, final Principal principal, final CommandContext context) {
+    public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
         // trace
         final List<PermissionAssignment> assignments = principal.trace(context, permission);
         for (final PermissionAssignment assignment : assignments) {

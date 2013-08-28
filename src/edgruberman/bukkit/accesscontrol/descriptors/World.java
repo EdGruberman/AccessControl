@@ -1,5 +1,6 @@
 package edgruberman.bukkit.accesscontrol.descriptors;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -28,28 +30,37 @@ public class World extends Descriptor {
         this.permissions = worldPermissions;
     }
 
+    // ---- permissions ----
+
     @Override
     public Map<String, Boolean> permissions(final OfflinePlayer context) {
         if (!context.isOnline() || context.getPlayer().getWorld() == null) return Collections.emptyMap();
-        final Map<String, Boolean> result = this.permissions.get(context.getPlayer().getWorld().getName().toLowerCase(Locale.ENGLISH));
-        return ( result != null ? result : Collections.<String, Boolean>emptyMap() );
+        return this.permissions(context.getPlayer().getWorld().getName());
     }
 
     @Override
     public Map<String, Boolean> permissions(final List<String> context) {
-        if (context == null || context.size() < World.MINIMUM_ARGUMENTS) return Collections.emptyMap();
-        final Map<String, Boolean> result =  this.permissions.get(context.get(0).toLowerCase(Locale.ENGLISH));
+        return this.permissions(context.get(0));
+    }
+
+    public Map<String, Boolean> permissions(final org.bukkit.World world) {
+        return this.permissions(world.getName());
+    }
+
+    public Map<String, Boolean> permissions(final String world) {
+        final Map<String, Boolean> result =  this.permissions.get(world.toLowerCase(Locale.ENGLISH));
         return ( result != null ? result : Collections.<String, Boolean>emptyMap() );
     }
+
+    // ---- set ----
 
     @Override
     public Boolean setPermission(final List<String> context, final String permission, final boolean value) {
         return this.setPermission(context.get(0), permission, value);
     }
 
-    @Override
-    public Boolean unsetPermission(final List<String> context, final String permission) {
-        return this.unsetPermission(context.get(0), permission);
+    public Boolean setPermission(final org.bukkit.World world, final String permission, final boolean value) {
+        return this.setPermission(world.getName(), permission, value);
     }
 
     public Boolean setPermission(final String world, final String permission, final boolean value) {
@@ -62,6 +73,17 @@ public class World extends Descriptor {
         return permissions.put(permission, value);
     }
 
+    // ---- unset ----
+
+    @Override
+    public Boolean unsetPermission(final List<String> context, final String permission) {
+        return this.unsetPermission(context.get(0), permission);
+    }
+
+    public Boolean unsetPermission(final org.bukkit.World world, final String permission) {
+        return this.unsetPermission(world.getName(), permission);
+    }
+
     public Boolean unsetPermission(final String world, final String permission) {
         final String lower = world.toLowerCase(Locale.ENGLISH);
         final Map<String, Boolean> permissions = this.permissions.get(lower);
@@ -69,12 +91,16 @@ public class World extends Descriptor {
         return permissions.remove(permission);
     }
 
+    // ---- serialize ----
+
     @Override
     public Map<String, Object> serialize() {
         final Map<String, Object> result = new LinkedHashMap<String, Object>();
 
         for (final Map.Entry<String, Map<String, Boolean>> entry : this.permissions.entrySet()) {
-            result.put(entry.getKey(), Descriptor.serializePermissions(entry.getValue()));
+            final String world = entry.getKey();
+            final Map<String, Object> worldPermissions = Descriptor.serializePermissions(entry.getValue());
+            result.put(world, worldPermissions);
         }
 
         return result;
@@ -102,20 +128,33 @@ public class World extends Descriptor {
             return new World(new LinkedHashMap<String, Map<String, Boolean>>());
         }
 
+        @Override
+        public List<String> arguments(final Player player) {
+            final List<String> result = new ArrayList<String>();
+            result.add(player.getWorld().getName());
+            return result;
+        }
+
     }
 
 
 
-    public static class WorldPermissionApplicator implements Listener {
+    public static class PermissionApplicator implements Listener {
+
+        private final Authority authority;
+
+        public PermissionApplicator(final Authority authority) {
+            this.authority = authority;
+        }
 
         @EventHandler(priority = EventPriority.LOW) // before most other plugins assess permissions at NORMAL
         public void onPlayerJoin(final PlayerJoinEvent join) {
-            Authority.get().createUser(join.getPlayer()).apply(join.getPlayer());
+            this.authority.createUser(join.getPlayer()).apply(join.getPlayer());
         }
 
         @EventHandler(priority = EventPriority.LOW) // before most other plugins assess permissions at NORMAL
         public void onPlayerChangedWorld(final PlayerChangedWorldEvent change) {
-            Authority.get().createUser(change.getPlayer()).apply(change.getPlayer());
+            this.authority.createUser(change.getPlayer()).apply(change.getPlayer());
         }
 
     }

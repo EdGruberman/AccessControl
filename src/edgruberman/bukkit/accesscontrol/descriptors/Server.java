@@ -1,10 +1,12 @@
 package edgruberman.bukkit.accesscontrol.descriptors;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -64,15 +66,26 @@ public class Server extends Descriptor {
             return new Server(new LinkedHashMap<String, Boolean>());
         }
 
+        @Override
+        public List<String> arguments(final Player player) {
+            return Collections.emptyList();
+        }
+
     }
 
 
 
-    public static class ServerPermissionApplicator implements Listener {
+    public static class PermissionApplicator implements Listener {
+
+        private final Authority authority;
+
+        public PermissionApplicator(final Authority authority) {
+            this.authority = authority;
+        }
 
         @EventHandler(priority = EventPriority.LOW) // before most other plugins assess permissions at NORMAL
         public void onPlayerLogin(final PlayerLoginEvent login) {
-            Authority.get().createUser(login.getPlayer()).apply(login.getPlayer());
+            this.authority.createUser(login.getPlayer()).apply(login.getPlayer());
         }
 
     }

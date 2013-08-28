@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 /** conditional permissions */
 public abstract class Descriptor {
@@ -16,19 +17,19 @@ public abstract class Descriptor {
     public abstract Map<String, Boolean> permissions(final OfflinePlayer context);
 
     /**
-     * @param context descriptor specific command arguments; empty list when none
+     * @param context state represented in command arguments; empty list when none
      * @return direct permissions to apply for context, empty map if none, changes in map not necessarily reflected in descriptor
      */
     public abstract Map<String, Boolean> permissions(final List<String> context);
 
     /**
-     * @param context descriptor specific command arguments; empty list when none
+     * @param context state represented in command arguments; empty list when none
      * @return previous value associated with permission; null if none
      */
     public abstract Boolean setPermission(List<String> context, String permission, boolean value);
 
     /**
-     * @param context descriptor specific command arguments; empty list when none
+     * @param context state represented in command arguments; empty list when none
      * @return previous value associated with permission; null if none
      */
     public abstract Boolean unsetPermission(List<String> context, String permission);
@@ -52,10 +53,13 @@ public abstract class Descriptor {
     public abstract static class Factory {
 
         /** deserialization from a repository */
-        public abstract Descriptor deserialize(final Map<String, Object> serialized);
+        public abstract Descriptor deserialize(Map<String, Object> serialized);
 
         /** construct empty descriptor */
         public abstract Descriptor create();
+
+        /** @return command arguments that match player context */
+        public abstract List<String> arguments(Player player);
 
 
 
