@@ -1,6 +1,7 @@
 package edgruberman.bukkit.accesscontrol.descriptors;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -18,10 +19,9 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import edgruberman.bukkit.accesscontrol.Authority;
 import edgruberman.bukkit.accesscontrol.Descriptor;
 
-/** single argument of world name */
 public class World extends Descriptor {
 
-    public static final int MINIMUM_ARGUMENTS = 1;
+    public static final List<String> REQUIRED = Arrays.asList("world");
 
     /** world, permission, value */
     protected Map<String, Map<String, Boolean>> permissions;
@@ -49,7 +49,8 @@ public class World extends Descriptor {
 
     public Map<String, Boolean> permissions(final String world) {
         final Map<String, Boolean> result =  this.permissions.get(world.toLowerCase(Locale.ENGLISH));
-        return ( result != null ? result : Collections.<String, Boolean>emptyMap() );
+        if (result == null) return Collections.emptyMap();
+        return result;
     }
 
     // ---- set ----
@@ -129,10 +130,15 @@ public class World extends Descriptor {
         }
 
         @Override
-        public List<String> arguments(final Player player) {
+        public List<String> arguments(final Player context) {
             final List<String> result = new ArrayList<String>();
-            result.add(player.getWorld().getName());
+            result.add(context.getWorld().getName());
             return result;
+        }
+
+        @Override
+        public List<String> required() {
+            return World.REQUIRED;
         }
 
     }

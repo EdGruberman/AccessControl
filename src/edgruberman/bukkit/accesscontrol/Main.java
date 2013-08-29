@@ -42,7 +42,7 @@ public final class Main extends CustomPlugin implements Listener {
     @Override
     public void onLoad() {
         this.putConfigMinimum("8.0.0a0");
-        this.putConfigMinimum("language.yml", "8.0.0b15");
+        this.putConfigMinimum("language.yml", "8.0.0b27");
     }
 
     @Override
@@ -104,8 +104,8 @@ public final class Main extends CustomPlugin implements Listener {
 
     @EventHandler
     public void onDescriptorRegistration(final DescriptorRegistrationEvent registration) {
-        registration.register("server", Server.class, new Server.Factory(), Server.MINIMUM_ARGUMENTS);
-        registration.register("world", World.class, new World.Factory(), World.MINIMUM_ARGUMENTS);
+        registration.register("server", Server.class, new Server.Factory());
+        registration.register("world", World.class, new World.Factory());
     }
 
     @EventHandler

@@ -115,6 +115,13 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
 
 
 
+    protected static String properName(final Principal principal) {
+        if (!principal.getClass().equals(User.class)) return principal.getName();
+        return Bukkit.getOfflinePlayer(principal.getName()).getName();
+    }
+
+
+
 
 
     abstract class ExecutionContext implements Context {
@@ -130,14 +137,9 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
             return this.context.permissions(descriptor);
         }
 
+        /** @return reference and arguments used for verbose context for primary registration */
         public List<String> describe() {
-            final List<String> result = new ArrayList<String>();
-
-            for (final Registration registration : PermissionExecutor.this.registrations) {
-                result.addAll(this.describe(registration.getImplementation()));
-            }
-
-            return result;
+            return this.describe(this.registration().getImplementation());
         }
 
         /** @return reference and arguments used for verbose context in commands */
@@ -187,7 +189,7 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
             // identify first no argument registration to assume for primary
             Registration found = null;
             for (final Registration registration : PermissionExecutor.this.registrations) {
-                if (registration.getMinimumArguments() == 0) {
+                if (registration.getFactory().required().size() == 0) {
                     found = registration;
                     break;
                 }

@@ -12,24 +12,24 @@ public abstract class Descriptor {
 
     /**
      * @param context player state
-     * @return direct permissions to apply for context, empty map if none, changes in map not necessarily reflected in descriptor
+     * @return direct permissions to apply for context, empty map if none
      */
     public abstract Map<String, Boolean> permissions(final OfflinePlayer context);
 
     /**
-     * @param context state represented in command arguments; empty list when none
-     * @return direct permissions to apply for context, empty map if none, changes in map not necessarily reflected in descriptor
+     * @param context state represented in command arguments, minimum size for required
+     * @return direct permissions to apply for context, empty map if none
      */
     public abstract Map<String, Boolean> permissions(final List<String> context);
 
     /**
-     * @param context state represented in command arguments; empty list when none
+     * @param context state represented in command arguments, minimum size for required
      * @return previous value associated with permission; null if none
      */
     public abstract Boolean setPermission(List<String> context, String permission, boolean value);
 
     /**
-     * @param context state represented in command arguments; empty list when none
+     * @param context state represented in command arguments, minimum size for required
      * @return previous value associated with permission; null if none
      */
     public abstract Boolean unsetPermission(List<String> context, String permission);
@@ -50,6 +50,8 @@ public abstract class Descriptor {
 
 
 
+
+
     public abstract static class Factory {
 
         /** deserialization from a repository */
@@ -60,6 +62,9 @@ public abstract class Descriptor {
 
         /** @return command arguments that represent player context */
         public abstract List<String> arguments(Player context);
+
+        /** @return minimum command argument names for context in expected order; empty when none required */
+        public abstract List<String> required();
 
 
 

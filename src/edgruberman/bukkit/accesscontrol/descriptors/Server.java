@@ -18,7 +18,7 @@ import edgruberman.bukkit.accesscontrol.Descriptor;
 /** always applicable independent of context, no arguments */
 public class Server extends Descriptor {
 
-    public static final int MINIMUM_ARGUMENTS = 0;
+    public static final List<String> REQUIRED = Collections.emptyList();
 
     protected final Map<String, Boolean> permissions;
 
@@ -67,8 +67,13 @@ public class Server extends Descriptor {
         }
 
         @Override
-        public List<String> arguments(final Player player) {
+        public List<String> arguments(final Player context) {
             return Collections.emptyList();
+        }
+
+        @Override
+        public List<String> required() {
+            return Server.REQUIRED;
         }
 
     }

@@ -9,6 +9,7 @@ import edgruberman.bukkit.accesscontrol.Descriptor;
 import edgruberman.bukkit.accesscontrol.Main;
 import edgruberman.bukkit.accesscontrol.Principal;
 import edgruberman.bukkit.accesscontrol.Registrar.Registration;
+import edgruberman.bukkit.accesscontrol.User;
 import edgruberman.bukkit.accesscontrol.util.JoinList;
 
 public class Grant extends PermissionExecutor {
@@ -20,32 +21,29 @@ public class Grant extends PermissionExecutor {
     // usage: /<command> permission [name] [type] [context]
     @Override
     public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
-        // use last section in case no argument descriptor is assumed and ordered first when no references are explicitly supplied
-        String arguments = context.registration().getReference();
-        if (!context.arguments().isEmpty()) arguments += " " + JoinList.join(context.arguments());
+        Descriptor descriptor = principal.getPermissions(context.registration().getImplementation());
+        final boolean existing = (descriptor != null);
+        if (!existing) descriptor = context.registration().getFactory().create();
 
-        final Descriptor existing = principal.getPermissions(context.registration().getImplementation());
-        if (existing != null) {
-            final Boolean previous = existing.setPermission(context.arguments(), permission, true);
-
-            principal.save();
-            principal.apply();
-
-            if (previous != null && previous) {
-                Main.courier.send(sender, "grant.already", principal.getName(), permission, arguments);
-            } else {
-                Main.courier.send(sender, "grant.success", principal.getName(), permission, arguments, ( previous == null ? 0 : -1 ));
-            }
-            return true;
+        if (context.registration().getFactory().required().size() > context.arguments().size()) {
+            Main.courier.send(sender, "requires-argument", context.registration().getFactory().required().get(context.arguments().size() + 1), 0);
+            return false;
         }
 
-        final Descriptor descriptor = context.registration().getFactory().create();
-        descriptor.setPermission(context.arguments(), permission, true);
-        principal.addPermissions(descriptor);
+        final Boolean previous = descriptor.setPermission(context.arguments(), permission, true);
+        if (!existing) principal.addPermissions(descriptor);
+
         principal.save();
         principal.apply();
 
-        Main.courier.send(sender, "grant.success", principal.getName(), permission, arguments, 0);
+        if (previous != null && previous) {
+            Main.courier.send(sender, "grant.already", permission, PermissionExecutor.properName(principal)
+                    , principal.getClass().equals(User.class)?0:1, JoinList.join(context.describe()));
+        } else {
+            Main.courier.send(sender, "grant.success", permission, PermissionExecutor.properName(principal)
+                    , principal.getClass().equals(User.class)?0:1, JoinList.join(context.describe()), ( previous == null ? 0 : -1 ));
+        }
+
         return true;
     }
 

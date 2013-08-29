@@ -59,7 +59,9 @@ public interface Context {
                     // use next section as last index, end of list if no more
                     final int to = ( i + 1 < sections.size() ?  sections.get(i + 1).index : arguments.size() );
 
-                    section.arguments = arguments.subList(section.index + 1, to);
+                    // for explicit references with no arguments use empty list
+                    final int from = section.index + 1;
+                    section.arguments = ( from <= to ? arguments.subList(from, to) : Collections.<String>emptyList() );
 
                     this.sections.add(section);
                     this.implementationToSection.put(section.registration.getImplementation(), section);
@@ -72,7 +74,7 @@ public interface Context {
                 if (sections.size() == 0) {
                     final int i = 0;
                     for (final Registration registration : unmatched) {
-                        final int to = i + registration.getMinimumArguments();
+                        final int to = i + registration.getFactory().required().size();
                         if (to > arguments.size()) break;
 
                         final ArgumentSection section = new ArgumentSection(i, registration);
@@ -86,7 +88,7 @@ public interface Context {
         }
 
         /**
-         * identify reference delimiters
+         * identify explicit reference delimiters
          * @param unmatched ordered according to configuration
          * @return ordered by reference without arguments
          */
@@ -95,32 +97,27 @@ public interface Context {
 
             // identify reference delimiters to split argument groups by
             for (int i = 0; i < arguments.size(); i++) {
-                final ArgumentSection next = this.next(arguments.subList(i, arguments.size()), unmatched);
+                final ArgumentSection next = this.next(arguments, i, unmatched);
                 if (next == null) break;
                 result.add(next);
-                i += next.registration.getMinimumArguments();
+                i += next.index + next.registration.getFactory().required().size();
             }
 
             return result;
         }
 
         /**
-         * find next argument grouping, do not assign arguments yet
-         * as we first need to identify all reference delimiters
-         * to allow for optional arguments being supplied
+         * find next explicit reference to identify start of argument group;
+         * do not assign arguments yet to allow for identification of all
+         * references first and for optional arguments being supplied
          */
-        private ArgumentSection next(final List<String> remaining, final Collection<Registration> unmatched) {
-            for (int i = 0; i < remaining.size(); i++) {
-                final String argument = remaining.get(i).toLowerCase(Locale.ENGLISH);
+        private ArgumentSection next(final List<String> arguments, final int start, final Collection<Registration> unmatched) {
+            for (int i = start; i < arguments.size(); i++) {
+                final String argument = arguments.get(i).toLowerCase(Locale.ENGLISH);
 
                 final Iterator<Registration> registrations = unmatched.iterator();
                 while (registrations.hasNext()) {
                     final Registration registration = registrations.next();
-
-                    if (registration.getMinimumArguments() == 0) {
-                        registrations.remove();
-                        continue;
-                    }
 
                     if (!registration.getReference().equals(argument)) continue;
 
@@ -148,7 +145,9 @@ public interface Context {
         @Override
         public Map<String, Boolean> permissions(final Descriptor descriptor) {
             final ArgumentSection section = this.implementationToSection.get(descriptor.getClass());
-            return descriptor.permissions( section != null ? section.arguments : Collections.<String>emptyList() );
+            if (section == null) return Collections.emptyMap();
+            if (section.arguments.size() < section.registration.getFactory().required().size()) return Collections.emptyMap();
+            return descriptor.permissions(section.arguments);
         }
 
 

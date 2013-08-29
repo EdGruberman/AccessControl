@@ -14,7 +14,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 
 /** descriptor manager */
-public class Registrar {
+public final class Registrar {
 
     private final Plugin plugin;
     private final LinkedHashMap<String, Registration> registrations = new LinkedHashMap<String, Registration>();
@@ -71,9 +71,9 @@ public class Registrar {
     }
 
     // put registration in order specified in configuration, or at end of map
-    void register(final String reference, final Class<? extends Descriptor> implementation, final Descriptor.Factory factory, final int minimumArguments) {
+    void register(final String reference, final Class<? extends Descriptor> implementation, final Descriptor.Factory factory) {
         if (this.registrations.get(reference) != null) throw new IllegalArgumentException("reference must be unique; conflicting reference: " + reference);
-        this.registrations.put(reference, new Registration(reference, implementation, factory, minimumArguments));
+        this.registrations.put(reference, new Registration(reference, implementation, factory));
     }
 
 
@@ -84,13 +84,11 @@ public class Registrar {
         private final String reference;
         private final Class<? extends Descriptor> implementation;
         private final Descriptor.Factory factory;
-        private final int minimumArguments;
 
-        Registration(final String reference, final Class<? extends Descriptor> implementation, final Descriptor.Factory factory, final int minimumArguments) {
+        Registration(final String reference, final Class<? extends Descriptor> implementation, final Descriptor.Factory factory) {
             this.reference = reference;
             this.implementation = implementation;
             this.factory = factory;
-            this.minimumArguments = minimumArguments;
         }
 
         public String getReference() {
@@ -103,10 +101,6 @@ public class Registrar {
 
         public Descriptor.Factory getFactory() {
             return this.factory;
-        }
-
-        public int getMinimumArguments() {
-            return this.minimumArguments;
         }
 
     }
@@ -128,13 +122,13 @@ public class Registrar {
             return this.authority;
         }
 
-        public void register(final String reference, final Class<? extends Descriptor> implementation, final Descriptor.Factory factory, final int minumumArguments) {
+        /** @param reference name used in configuration file for ordering and in command arguments */
+        public void register(final String reference, final Class<? extends Descriptor> implementation, final Descriptor.Factory factory) {
             if (reference == null) throw new IllegalArgumentException("reference can not be null");
             if (implementation == null) throw new IllegalArgumentException("implementation can not be null");
             if (factory == null) throw new IllegalArgumentException("factory can not be null");
-            if (minumumArguments < 0) throw new IllegalArgumentException("minimumArguments can not be negative");
 
-            this.registrar.register(reference.toLowerCase(Locale.ENGLISH), implementation, factory, minumumArguments);
+            this.registrar.register(reference.toLowerCase(Locale.ENGLISH), implementation, factory);
         }
 
         // ---- event handlers ----
