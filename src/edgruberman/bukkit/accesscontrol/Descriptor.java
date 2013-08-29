@@ -4,7 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 /** conditional permissions */
@@ -14,7 +13,7 @@ public abstract class Descriptor {
      * @param context player state
      * @return direct permissions to apply for context, empty map if none
      */
-    public abstract Map<String, Boolean> permissions(final OfflinePlayer context);
+    public abstract Map<String, Boolean> permissions(final Player context);
 
     /**
      * @param context state represented in command arguments, minimum size for required

@@ -6,6 +6,7 @@ import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionAttachment;
 
@@ -35,17 +36,17 @@ public final class User extends Principal {
     public void apply() {
         final OfflinePlayer player = this.getPlayer();
         if (!player.isOnline()) return;
-        this.apply(player);
+        this.apply(player.getPlayer());
     }
 
     /** used during login events where the player is not fully online yet */
-    public void apply(final OfflinePlayer player) {
+    public void apply(final Player player) {
         this.implicit.getChildren().clear();
         this.implicit.getChildren().putAll(this.permissions(new PlayerContext(player)));
         this.implicit.getChildren().remove(this.implicit.getName());
 
         if (this.attachment == null) {
-            this.attachment = player.getPlayer().addAttachment(this.authority.getPlugin());
+            this.attachment = player.addAttachment(this.authority.getPlugin());
             this.attachment.setPermission(this.implicit, true);
         } else {
             this.implicit.recalculatePermissibles();

@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -27,7 +26,7 @@ public class Server extends Descriptor {
     }
 
     @Override
-    public Map<String, Boolean> permissions(final OfflinePlayer context) {
+    public Map<String, Boolean> permissions(final Player context) {
         return this.permissions;
     }
 

@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -33,8 +32,8 @@ public class World extends Descriptor {
     // ---- permissions ----
 
     @Override
-    public Map<String, Boolean> permissions(final OfflinePlayer context) {
-        if (!context.isOnline() || context.getPlayer().getWorld() == null) return Collections.emptyMap();
+    public Map<String, Boolean> permissions(final Player context) {
+        if (context.getPlayer().getWorld() == null) return Collections.emptyMap();
         return this.permissions(context.getPlayer().getWorld().getName());
     }
 

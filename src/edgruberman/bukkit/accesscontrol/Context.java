@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import edgruberman.bukkit.accesscontrol.Registrar.Registration;
 
@@ -21,9 +21,9 @@ public interface Context {
 
     public static class PlayerContext implements Context {
 
-        private final OfflinePlayer state;
+        private final Player state;
 
-        public PlayerContext(final OfflinePlayer state) {
+        public PlayerContext(final Player state) {
             this.state = state;
         }
 
