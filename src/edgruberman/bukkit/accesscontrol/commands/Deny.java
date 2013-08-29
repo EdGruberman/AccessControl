@@ -20,11 +20,11 @@ public class Deny extends PermissionExecutor {
     // usage: /<command> permission [name] [type] [context]
     @Override
     public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
-        final String arguments = context.getPrimaryRegistration().getReference() + " " + JoinList.join(context.getPrimaryArguments());
+        final String arguments = context.registration().getReference() + " " + JoinList.join(context.arguments());
 
-        final Descriptor existing = principal.getPermissions(context.getPrimaryRegistration().getImplementation());
+        final Descriptor existing = principal.getPermissions(context.registration().getImplementation());
         if (existing != null) {
-            final Boolean previous = existing.setPermission(context.getPrimaryArguments(), permission, false);
+            final Boolean previous = existing.setPermission(context.arguments(), permission, false);
 
             principal.save();
             principal.apply();
@@ -37,8 +37,8 @@ public class Deny extends PermissionExecutor {
             return true;
         }
 
-        final Descriptor descriptor = context.getPrimaryRegistration().getFactory().create();
-        descriptor.setPermission(context.getPrimaryArguments(), permission, false);
+        final Descriptor descriptor = context.registration().getFactory().create();
+        descriptor.setPermission(context.arguments(), permission, false);
         principal.addPermissions(descriptor);
         principal.save();
         principal.apply();

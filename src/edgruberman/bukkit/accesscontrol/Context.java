@@ -44,7 +44,7 @@ public interface Context {
     public static class CommandContext implements Context {
 
         private final List<ArgumentSection> sections = new ArrayList<ArgumentSection>();
-        private final Map<Class<? extends Descriptor>, ArgumentSection> sectionsByType = new LinkedHashMap<Class<? extends Descriptor>, ArgumentSection>();
+        private final Map<Class<? extends Descriptor>, ArgumentSection> implementationToSection = new LinkedHashMap<Class<? extends Descriptor>, ArgumentSection>();
 
         /** @param arguments context arguments in order supplied */
         public CommandContext(final List<Registration> registrations, final List<String> arguments) {
@@ -62,7 +62,7 @@ public interface Context {
                     section.arguments = arguments.subList(section.index + 1, to);
 
                     this.sections.add(section);
-                    this.sectionsByType.put(section.registration.getImplementation(), section);
+                    this.implementationToSection.put(section.registration.getImplementation(), section);
                 }
 
             } else {
@@ -79,7 +79,7 @@ public interface Context {
                         section.arguments = arguments.subList(i, to);
 
                         this.sections.add(section);
-                        this.sectionsByType.put(section.registration.getImplementation(), section);
+                        this.implementationToSection.put(section.registration.getImplementation(), section);
                     }
                 }
             }
@@ -132,8 +132,9 @@ public interface Context {
             return null;
         }
 
-        public ArgumentSection getSection(final Class<? extends Descriptor> type) {
-            return this.sectionsByType.get(type);
+        /** @return section relating to implementation; null if no section matches */
+        public ArgumentSection getSection(final Class<? extends Descriptor> implementation) {
+            return this.implementationToSection.get(implementation);
         }
 
         public ArgumentSection getSection(final int index) {
@@ -146,7 +147,7 @@ public interface Context {
 
         @Override
         public Map<String, Boolean> permissions(final Descriptor descriptor) {
-            final ArgumentSection section = this.sectionsByType.get(descriptor.getClass());
+            final ArgumentSection section = this.implementationToSection.get(descriptor.getClass());
             return descriptor.permissions( section != null ? section.arguments : Collections.<String>emptyList() );
         }
 

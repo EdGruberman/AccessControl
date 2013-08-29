@@ -172,7 +172,7 @@ public abstract class Principal {
         for (final Descriptor descriptor : this.permissions) {
             for (final Map.Entry<String, Boolean> entry : context.permissions(descriptor).entrySet()) {
                 if (entry.getKey().equals(permission)) {
-                    result.add(new PermissionAssignment(this, entry.getValue()));
+                    result.add(new PermissionAssignment(this, entry.getValue(), descriptor));
                     break;
                 }
             }
@@ -200,10 +200,17 @@ public abstract class Principal {
 
         private final Principal source;
         private final Boolean value;
+        private final Descriptor descriptor;
 
+        /** implicit assignment */
         PermissionAssignment(final Principal source, final Boolean value) {
+            this(source, value, null);
+        }
+
+        PermissionAssignment(final Principal source, final Boolean value, final Descriptor descriptor) {
             this.source = source;
             this.value = value;
+            this.descriptor = descriptor;
         }
 
         public Principal getSource() {
@@ -212,6 +219,10 @@ public abstract class Principal {
 
         public Boolean getValue() {
             return this.value;
+        }
+
+        public Descriptor getDescriptor() {
+            return this.descriptor;
         }
 
     }

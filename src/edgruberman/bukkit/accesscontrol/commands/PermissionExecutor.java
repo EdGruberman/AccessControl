@@ -1,5 +1,6 @@
 package edgruberman.bukkit.accesscontrol.commands;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -25,8 +26,8 @@ import edgruberman.bukkit.accesscontrol.util.TokenizedExecutor;
 
 public abstract class PermissionExecutor extends TokenizedExecutor {
 
-    private final Authority authority;
-    private final List<Registration> registrations;
+    protected final Authority authority;
+    protected final List<Registration> registrations;
 
     public PermissionExecutor(final Authority authority, final List<Registration> registrations) {
         this.authority = authority;
@@ -76,24 +77,16 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
         final List<String> contextArgs = ( args.size() >= 4 ? args.subList(3, args.size()) : Collections.<String>emptyList() );
         ExecutionContext context = null;
         if (contextArgs.size() == 0 && type.equals(User.class.getSimpleName().toLowerCase(Locale.ENGLISH))) {
+            final OfflinePlayer target = Bukkit.getOfflinePlayer(name);
+            if (target.isOnline()) {
+                context = new PlayerExecutionContext(target.getPlayer());
 
-            // identify first no argument registration to assume
-            Registration primary = null;
-            for (final Registration registration : PermissionExecutor.this.registrations) {
-                if (registration.getMinimumArguments() == 0) {
-                    primary = registration;
-                    break;
-                }
-
-                // cancel when unable to identify a descriptor registered that accepts no arguments
-                if (primary == null) {
+                // cancel when unable to identify primary registration based on no arguments
+                if (context.registration() == null) {
                     Main.courier.send(sender, "requires-argument", "context", 0);
                     return false;
                 }
             }
-
-            final OfflinePlayer target = Bukkit.getOfflinePlayer(name);
-            if (target.isOnline()) context = new ExecutionContext(target.getPlayer(), primary);
         }
 
 
@@ -107,7 +100,7 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
                 return false;
             }
 
-            context = new ExecutionContext(cc);
+            context = new ArgumentExecutionContext(cc);
         }
 
 
@@ -124,27 +117,12 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
 
 
 
-    static class ExecutionContext implements Context {
+    abstract class ExecutionContext implements Context {
 
-        private final Context context;
-        private final Registration primaryRegistration;
-        private final List<String> primaryArguments;
+        protected final Context context;
 
-        ExecutionContext(final Player context, final Registration primary) {
-            this.context = new PlayerContext(context);
-
-            this.primaryRegistration = primary;
-            this.primaryArguments = primary.getFactory().arguments(context);
-        }
-
-        ExecutionContext(final CommandContext context) {
+        protected ExecutionContext(final Context context) {
             this.context = context;
-
-            final CommandContext cc = context;
-            final ArgumentSection section = cc.getSection(cc.size() - 1);
-
-            this.primaryRegistration = section.getRegistration();
-            this.primaryArguments = section.getArguments();
         }
 
         @Override
@@ -152,14 +130,117 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
             return this.context.permissions(descriptor);
         }
 
-        /** @return descriptor registration to use when command only affects a single descriptor */
-        public Registration getPrimaryRegistration() {
-            return this.primaryRegistration;
+        public List<String> describe() {
+            final List<String> result = new ArrayList<String>();
+
+            for (final Registration registration : PermissionExecutor.this.registrations) {
+                result.addAll(this.describe(registration.getImplementation()));
+            }
+
+            return result;
+        }
+
+        /** @return reference and arguments used for verbose context in commands */
+        public List<String> describe(final Class<? extends Descriptor> implementation) {
+            final List<String> result = new ArrayList<String>();
+
+            final List<String> arguments = this.arguments(implementation);
+            if (arguments != null) {
+                result.add(this.registration(implementation).getReference());
+                result.addAll(arguments);
+            }
+
+            return result;
+        }
+
+        /** @return descriptor registration to use when command only affects a single descriptor; null when unable to determine */
+        public abstract Registration registration();
+
+        /** @return registration for the specified implementation; null when none apply */
+        public Registration registration(final Class<? extends Descriptor> implementation) {
+            for (final Registration registration : PermissionExecutor.this.registrations) {
+                if (!registration.getImplementation().equals(implementation)) continue;
+                return registration;
+            }
+            return null;
         }
 
         /** @return arguments associated with primary registration */
-        public List<String> getPrimaryArguments() {
-            return this.primaryArguments;
+        public abstract List<String> arguments();
+
+        /** @return command arguments that represent player context for the specified implementation; null when no registration applies */
+        public abstract List<String> arguments(final Class<? extends Descriptor> implementation);
+
+    }
+
+
+
+    class PlayerExecutionContext extends ExecutionContext {
+
+        private final Player player;
+        private final Registration primary;
+
+        PlayerExecutionContext(final Player context) {
+            super(new PlayerContext(context));
+            this.player = context;
+
+            // identify first no argument registration to assume for primary
+            Registration found = null;
+            for (final Registration registration : PermissionExecutor.this.registrations) {
+                if (registration.getMinimumArguments() == 0) {
+                    found = registration;
+                    break;
+                }
+            }
+            this.primary = found;
+        }
+
+        @Override
+        public Registration registration() {
+            return this.primary;
+        }
+
+        @Override
+        public List<String> arguments() {
+            return this.primary.getFactory().arguments(this.player);
+        }
+
+        @Override
+        public List<String> arguments(final Class<? extends Descriptor> implementation) {
+            final Registration registration = this.registration(implementation);
+            if (registration == null) return null;
+            return registration.getFactory().arguments(this.player);
+        }
+
+    }
+
+
+
+    class ArgumentExecutionContext extends ExecutionContext {
+
+        private final ArgumentSection primary;
+
+        ArgumentExecutionContext(final CommandContext context) {
+            super(context);
+            this.primary = context.getSection(context.size() - 1);
+        }
+
+        @Override
+        public Registration registration() {
+            return this.primary.getRegistration();
+        }
+
+        @Override
+        public List<String> arguments() {
+            return this.primary.getArguments();
+        }
+
+        @Override
+        public List<String> arguments(final Class<? extends Descriptor> implementation) {
+            final CommandContext cc = (CommandContext) this.context;
+            final ArgumentSection section = cc.getSection(implementation);
+            if (section == null) return null;
+            return section.getArguments();
         }
 
     }

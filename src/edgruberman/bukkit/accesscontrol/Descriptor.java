@@ -58,8 +58,8 @@ public abstract class Descriptor {
         /** construct empty descriptor */
         public abstract Descriptor create();
 
-        /** @return command arguments that match player context */
-        public abstract List<String> arguments(Player player);
+        /** @return command arguments that represent player context */
+        public abstract List<String> arguments(Player context);
 
 
 

@@ -21,11 +21,12 @@ public class Grant extends PermissionExecutor {
     @Override
     public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
         // use last section in case no argument descriptor is assumed and ordered first when no references are explicitly supplied
-        final String arguments = context.getPrimaryRegistration().getReference() + " " + JoinList.join(context.getPrimaryArguments());
+        String arguments = context.registration().getReference();
+        if (!context.arguments().isEmpty()) arguments += " " + JoinList.join(context.arguments());
 
-        final Descriptor existing = principal.getPermissions(context.getPrimaryRegistration().getImplementation());
+        final Descriptor existing = principal.getPermissions(context.registration().getImplementation());
         if (existing != null) {
-            final Boolean previous = existing.setPermission(context.getPrimaryArguments(), permission, true);
+            final Boolean previous = existing.setPermission(context.arguments(), permission, true);
 
             principal.save();
             principal.apply();
@@ -38,8 +39,8 @@ public class Grant extends PermissionExecutor {
             return true;
         }
 
-        final Descriptor descriptor = context.getPrimaryRegistration().getFactory().create();
-        descriptor.setPermission(context.getPrimaryArguments(), permission, true);
+        final Descriptor descriptor = context.registration().getFactory().create();
+        descriptor.setPermission(context.arguments(), permission, true);
         principal.addPermissions(descriptor);
         principal.save();
         principal.apply();

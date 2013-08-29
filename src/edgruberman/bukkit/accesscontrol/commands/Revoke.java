@@ -20,14 +20,14 @@ public class Revoke extends PermissionExecutor {
     // usage: /<command> permission [name] [type] [context]
     @Override
     public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
-        final String arguments = context.getPrimaryRegistration().getReference() + " " + JoinList.join(context.getPrimaryArguments());
+        final String arguments = context.registration().getReference() + " " + JoinList.join(context.arguments());
 
-        final Descriptor existing = principal.getPermissions(context.getPrimaryRegistration().getImplementation());
+        final Descriptor existing = principal.getPermissions(context.registration().getImplementation());
         if (existing != null) {
-            final Boolean previous = existing.unsetPermission(context.getPrimaryArguments(), permission);
+            final Boolean previous = existing.unsetPermission(context.arguments(), permission);
 
             // remove descriptor if removed last permission and now empty
-            if (previous != null && existing.permissions(context.getPrimaryArguments()).size() == 0) {
+            if (previous != null && existing.permissions(context.arguments()).size() == 0) {
                 principal.removePermissions(existing.getClass());
             }
 

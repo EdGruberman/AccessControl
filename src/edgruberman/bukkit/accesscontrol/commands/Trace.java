@@ -14,6 +14,7 @@ import edgruberman.bukkit.accesscontrol.Principal;
 import edgruberman.bukkit.accesscontrol.Principal.PermissionAssignment;
 import edgruberman.bukkit.accesscontrol.Registrar.Registration;
 import edgruberman.bukkit.accesscontrol.User;
+import edgruberman.bukkit.accesscontrol.util.JoinList;
 
 public class Trace extends PermissionExecutor {
 
@@ -27,11 +28,15 @@ public class Trace extends PermissionExecutor {
     // usage: /<command> permission [name] [type] [context]
     @Override
     public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
+        // context
+        Main.courier.send(sender, "trace.context", JoinList.join(context.describe()), this.caseName(principal), principal.getClass().equals(User.class)?0:1);
+
         // trace
         final List<PermissionAssignment> assignments = principal.trace(context, permission);
         for (final PermissionAssignment assignment : assignments) {
             Main.courier.send(sender, "trace.assignment", permission, this.caseName(principal), principal.getClass().equals(User.class)?0:1
-                    , assignment.getValue()?1:0, assignment.getSource().equals(principal)?1:0, this.caseName(assignment.getSource()));
+                    , assignment.getValue()?1:0, assignment.getSource().equals(principal)?1:0, this.caseName(assignment.getSource())
+                    , assignment.getSource().getClass().equals(User.class)?0:1, JoinList.join(context.describe(assignment.getDescriptor().getClass())));
         }
 
         // default
