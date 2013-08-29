@@ -44,10 +44,10 @@ public class Revoke extends PermissionExecutor {
         principal.apply();
 
         if (previous == null) {
-            Main.courier.send(sender, "revoke.already", permission, PermissionExecutor.properName(principal)
+            Main.courier.send(sender, "revoke-already", permission, PermissionExecutor.properName(principal)
                     , principal.getClass().equals(User.class)?0:1, JoinList.join(context.describe()));
         } else {
-            Main.courier.send(sender, "revoke.success", permission, PermissionExecutor.properName(principal)
+            Main.courier.send(sender, "revoke-success", permission, PermissionExecutor.properName(principal)
                     , principal.getClass().equals(User.class)?0:1, JoinList.join(context.describe()), ( previous == false ? -1 : 1 ));
         }
 

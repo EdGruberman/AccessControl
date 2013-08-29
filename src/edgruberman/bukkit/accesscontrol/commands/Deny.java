@@ -37,10 +37,10 @@ public class Deny extends PermissionExecutor {
         principal.apply();
 
         if (previous != null && !previous) {
-            Main.courier.send(sender, "deny.already", permission, PermissionExecutor.properName(principal)
+            Main.courier.send(sender, "deny-already", permission, PermissionExecutor.properName(principal)
                     , principal.getClass().equals(User.class)?0:1, JoinList.join(context.describe()));
         } else {
-            Main.courier.send(sender, "deny.success", permission, PermissionExecutor.properName(principal)
+            Main.courier.send(sender, "deny-success", permission, PermissionExecutor.properName(principal)
                     , principal.getClass().equals(User.class)?0:1, JoinList.join(context.describe()), ( previous == null ? 0 : 1 ));
         }
 

@@ -57,12 +57,12 @@ public class Effective extends TokenizedExecutor {
         for (final PermissionAttachmentInfo info : infos) {
             if (match != null && !info.getPermission().contains(match)) continue;
             final String source = ( info.getAttachment() != null ? info.getAttachment().getPlugin().getName() : this.server.getName() );
-            final Message composed = Main.courier.compose("effective.permission", info.getPermission(), player.getName(), player.hasPermission(info.getPermission())?1:0, source);
+            final Message composed = Main.courier.compose("effective-permission", info.getPermission(), player.getName(), player.hasPermission(info.getPermission())?1:0, source);
             if (composed != null) response.add(composed);
         }
 
         if (response.size() == 0) {
-            Main.courier.send(sender, "effective.none", match);
+            Main.courier.send(sender, "effective-none", match);
             return true;
         }
 
@@ -70,7 +70,7 @@ public class Effective extends TokenizedExecutor {
         final int count = paginator.count();
         final int index = Math.min(Math.max(0, page - 1), count - 1); // between 1 and max pages
         for (final Message message : paginator.page(index)) Main.courier.submit(Recipients.Sender.create(sender), message);
-        Main.courier.send(sender, "effective.summary", index + 1, count);
+        Main.courier.send(sender, "effective-summary", index + 1, count);
 
         return true;
     }

@@ -29,12 +29,12 @@ public class Trace extends PermissionExecutor {
     @Override
     public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
         // context
-        Main.courier.send(sender, "trace.context", JoinList.join(context.describe()), PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1);
+        Main.courier.send(sender, "trace-context", JoinList.join(context.describe()), PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1);
 
         // trace
         final List<PermissionAssignment> assignments = principal.trace(context, permission);
         for (final PermissionAssignment assignment : assignments) {
-            Main.courier.send(sender, "trace.assignment", permission, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1
+            Main.courier.send(sender, "trace-assignment", permission, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1
                     , assignment.getValue()?1:0, assignment.getSource().equals(principal)?1:0, PermissionExecutor.properName(assignment.getSource())
                     , assignment.getSource().getClass().equals(User.class)?0:1, JoinList.join(context.describe(assignment.getDescriptor().getClass())));
         }
@@ -45,7 +45,7 @@ public class Trace extends PermissionExecutor {
             final Permission instance = this.server.getPluginManager().getPermission(permission);
             final PermissionDefault defaultPermission = ( instance != null ? instance.getDefault() : Permission.DEFAULT_PERMISSION );
             final boolean result = defaultPermission.getValue( target != null ? target.isOp() : false );
-            Main.courier.send(sender, "trace.default", permission, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1, result?1:0, defaultPermission.name());
+            Main.courier.send(sender, "trace-default", permission, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1, result?1:0, defaultPermission.name());
         }
 
         if (!principal.isPersistent()) principal.delete();
