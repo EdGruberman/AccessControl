@@ -148,37 +148,6 @@ public abstract class Principal {
         result.put(this.implicit.getName(), true);
     }
 
-    /** calculate assignments related to permission; farthest inherited first to closest inherited, then direct */
-    public List<PermissionAssignment> trace(final Context context, final String permission) {
-        final List<PermissionAssignment> result = new ArrayList<PermissionAssignment>();
-
-        // inherited
-        for (final Group inherited : this.memberships()) {
-            inherited.traceDirect(context, permission, result);
-        }
-
-        // direct
-        this.traceDirect(context, permission, result);
-
-        // implicit
-        if (this.implicit.getName().equals(permission)) {
-            result.add(new PermissionAssignment(this, true));
-        }
-
-        return result;
-    }
-
-    protected void traceDirect(final Context context, final String permission, final List<PermissionAssignment> result) {
-        for (final Descriptor descriptor : this.permissions) {
-            for (final Map.Entry<String, Boolean> entry : context.permissions(descriptor).entrySet()) {
-                if (entry.getKey().equals(permission)) {
-                    result.add(new PermissionAssignment(this, entry.getValue(), descriptor));
-                    break;
-                }
-            }
-        }
-    }
-
     public void delete() {
         this.authority.deletePrincipal(this);
     }
@@ -193,39 +162,6 @@ public abstract class Principal {
 
     /** @return true if this should be saved to repository */
     public abstract boolean isPersistent();
-
-
-
-    public static class PermissionAssignment {
-
-        private final Principal source;
-        private final Boolean value;
-        private final Descriptor descriptor;
-
-        /** implicit assignment */
-        PermissionAssignment(final Principal source, final Boolean value) {
-            this(source, value, null);
-        }
-
-        PermissionAssignment(final Principal source, final Boolean value, final Descriptor descriptor) {
-            this.source = source;
-            this.value = value;
-            this.descriptor = descriptor;
-        }
-
-        public Principal getSource() {
-            return this.source;
-        }
-
-        public Boolean getValue() {
-            return this.value;
-        }
-
-        public Descriptor getDescriptor() {
-            return this.descriptor;
-        }
-
-    }
 
 
 
