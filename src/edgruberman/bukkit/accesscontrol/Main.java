@@ -42,7 +42,7 @@ public final class Main extends CustomPlugin implements Listener {
     @Override
     public void onLoad() {
         this.putConfigMinimum("8.0.0a0");
-        this.putConfigMinimum("language.yml", "8.0.0b30");
+        this.putConfigMinimum("language.yml", "8.0.0b50");
     }
 
     @Override
@@ -124,4 +124,5 @@ public final class Main extends CustomPlugin implements Listener {
         for (final Listener listener : this.applicators) HandlerList.unregisterAll(listener);
         this.applicators.clear();
     }
+
 }

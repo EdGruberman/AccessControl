@@ -2,6 +2,7 @@ package edgruberman.bukkit.accesscontrol.commands;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -50,33 +51,39 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
 
         // identify target principal
         final String name = ( args.size() >= 2 ? args.get(1).toLowerCase(Locale.ENGLISH) : sender.getName().toLowerCase(Locale.ENGLISH) );
-        final String type = ( (args.size() >= 3) ? args.get(2).toLowerCase(Locale.ENGLISH) : User.class.getSimpleName().toLowerCase(Locale.ENGLISH) );
+        final PrincipalType type = ( (args.size() >= 3) ? PrincipalType.parse(args.get(2).toLowerCase(Locale.ENGLISH)) : null );
 
-        // explicit group, must exist
+        // group, must exist
         Principal principal = null;
-        if (type.equals(Group.class.getSimpleName().toLowerCase(Locale.ENGLISH))) {
+        if (type == null || PrincipalType.GROUP.equals(type)) {
             principal = this.authority.getGroup(name);
-            if (principal == null) {
+            if (principal == null && type != null) {
                 Main.courier.send(sender, "unknown-value", "name", name);
                 return false;
             }
+        }
 
-        // explicit user, create if new
-        } else if (type.equals(User.class.getSimpleName().toLowerCase(Locale.ENGLISH))) {
-            principal = this.authority.getUser(name);
-            if (principal == null) principal = this.authority.createUser(name);
-
-        // unknown, cancel out
-        } else {
-            Main.courier.send(sender, "unknown-value", "type", type);
-            return false;
+        // otherwise, assume user
+        if (principal == null || PrincipalType.USER.equals(type)) {
+            principal = this.authority.createUser(name);
         }
 
 
-        // use player context when no explicit descriptor references provided, type is a user, and player is online
-        final List<String> contextArgs = ( args.size() >= 4 ? args.subList(3, args.size()) : Collections.<String>emptyList() );
+        // identify context
+        final List<String> contextArgs;
+        if (type != null && (args.size() >= 4)) {
+            contextArgs = args.subList(3, args.size());
+
+        } else if (type == null && (args.size() >= 3)) {
+            contextArgs = args.subList(2, args.size());
+
+        } else {
+            contextArgs = Collections.<String>emptyList();
+        }
+
+        // use player context when no explicit descriptor references provided, principal is a user, and player is online
         ExecutionContext context = null;
-        if (contextArgs.size() == 0 && type.equals(User.class.getSimpleName().toLowerCase(Locale.ENGLISH))) {
+        if (contextArgs.size() == 0 && principal.getClass().equals(User.class)) {
             final OfflinePlayer target = Bukkit.getOfflinePlayer(name);
             if (target.isOnline()) {
                 context = new PlayerExecutionContext(target.getPlayer());
@@ -88,7 +95,6 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
                 }
             }
         }
-
 
         // otherwise attempt to use a standard command context
         if (context == null) {
@@ -124,6 +130,27 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
 
 
 
+    private static class PrincipalType {
+
+        private static final Map<String, PrincipalType> KNOWN = new HashMap<String, PrincipalType>();
+
+        static final PrincipalType USER = new PrincipalType(User.class);
+        static final PrincipalType GROUP = new PrincipalType(Group.class);
+
+        static PrincipalType parse(final String argument) {
+            return PrincipalType.KNOWN.get(argument);
+        }
+
+        private PrincipalType(final Class<? extends Principal> type) {
+            PrincipalType.KNOWN.put(type.getSimpleName().toLowerCase(), this);
+        }
+
+    }
+
+
+
+
+
     abstract class ExecutionContext implements Context {
 
         protected final Context context;
@@ -142,7 +169,7 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
             return this.describe(this.registration().getImplementation());
         }
 
-        /** @return reference and arguments used for verbose context in commands */
+        /** @return reference and arguments used for verbose context in commands; empty when no context found for implementation */
         public List<String> describe(final Class<? extends Descriptor> implementation) {
             final List<String> result = new ArrayList<String>();
 
