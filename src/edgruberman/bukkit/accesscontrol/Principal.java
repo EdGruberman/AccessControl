@@ -108,8 +108,6 @@ public abstract class Principal {
         // inherited memberships
         for (final Group direct : this.memberships) {
             for (final Group inherited : direct.memberships()) {
-                // ensure group is last entry in list to allow for closer group assignments to override by being applied as late as possible
-                result.remove(inherited);
                 result.add(inherited);
             }
         }
