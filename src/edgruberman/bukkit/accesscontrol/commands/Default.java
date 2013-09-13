@@ -12,7 +12,6 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 
 import edgruberman.bukkit.accesscontrol.Main;
-import edgruberman.bukkit.accesscontrol.util.TokenizedExecutor;
 
 public class Default extends TokenizedExecutor {
 

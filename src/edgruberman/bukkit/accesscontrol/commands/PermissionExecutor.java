@@ -1,6 +1,5 @@
 package edgruberman.bukkit.accesscontrol.commands;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -14,16 +13,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import edgruberman.bukkit.accesscontrol.Authority;
-import edgruberman.bukkit.accesscontrol.Context;
 import edgruberman.bukkit.accesscontrol.Context.CommandContext;
-import edgruberman.bukkit.accesscontrol.Context.CommandContext.ArgumentSection;
-import edgruberman.bukkit.accesscontrol.Descriptor;
 import edgruberman.bukkit.accesscontrol.Group;
 import edgruberman.bukkit.accesscontrol.Main;
 import edgruberman.bukkit.accesscontrol.Principal;
 import edgruberman.bukkit.accesscontrol.Registrar.Registration;
 import edgruberman.bukkit.accesscontrol.User;
-import edgruberman.bukkit.accesscontrol.util.TokenizedExecutor;
 
 public abstract class PermissionExecutor extends TokenizedExecutor {
 
@@ -86,7 +81,7 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
         if (contextArgs.size() == 0 && principal.getClass().equals(User.class)) {
             final OfflinePlayer target = Bukkit.getOfflinePlayer(name);
             if (target.isOnline()) {
-                context = new PlayerExecutionContext(target.getPlayer());
+                context = new PlayerExecutionContext(target.getPlayer(), this.registrations);
 
                 // cancel when unable to identify primary registration based on no arguments
                 if (context.registration() == null) {
@@ -106,7 +101,7 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
                 return false;
             }
 
-            context = new ArgumentExecutionContext(cc);
+            context = new ArgumentExecutionContext(cc, this.registrations);
         }
 
 
@@ -143,133 +138,6 @@ public abstract class PermissionExecutor extends TokenizedExecutor {
 
         private PrincipalType(final Class<? extends Principal> type) {
             PrincipalType.KNOWN.put(type.getSimpleName().toLowerCase(), this);
-        }
-
-    }
-
-
-
-
-
-    abstract class ExecutionContext implements Context {
-
-        protected final Context context;
-
-        protected ExecutionContext(final Context context) {
-            this.context = context;
-        }
-
-        @Override
-        public Map<String, Boolean> permissions(final Descriptor descriptor) {
-            return this.context.permissions(descriptor);
-        }
-
-        /** @return reference and arguments used for verbose context for primary registration */
-        public List<String> describe() {
-            return this.describe(this.registration().getImplementation());
-        }
-
-        /** @return reference and arguments used for verbose context in commands; empty when no context found for implementation */
-        public List<String> describe(final Class<? extends Descriptor> implementation) {
-            final List<String> result = new ArrayList<String>();
-
-            final List<String> arguments = this.arguments(implementation);
-            if (arguments != null) {
-                result.add(this.registration(implementation).getReference());
-                result.addAll(arguments);
-            }
-
-            return result;
-        }
-
-        /** @return descriptor registration to use when command only affects a single descriptor; null when unable to determine */
-        public abstract Registration registration();
-
-        /** @return registration for the specified implementation; null when none apply */
-        public Registration registration(final Class<? extends Descriptor> implementation) {
-            for (final Registration registration : PermissionExecutor.this.registrations) {
-                if (!registration.getImplementation().equals(implementation)) continue;
-                return registration;
-            }
-            return null;
-        }
-
-        /** @return arguments associated with primary registration */
-        public abstract List<String> arguments();
-
-        /** @return command arguments that represent player context for the specified implementation; null when no registration applies */
-        public abstract List<String> arguments(final Class<? extends Descriptor> implementation);
-
-    }
-
-
-
-    class PlayerExecutionContext extends ExecutionContext {
-
-        private final Player player;
-        private final Registration primary;
-
-        PlayerExecutionContext(final Player context) {
-            super(new PlayerContext(context));
-            this.player = context;
-
-            // identify first no argument registration to assume for primary
-            Registration found = null;
-            for (final Registration registration : PermissionExecutor.this.registrations) {
-                if (registration.getFactory().required().size() == 0) {
-                    found = registration;
-                    break;
-                }
-            }
-            this.primary = found;
-        }
-
-        @Override
-        public Registration registration() {
-            return this.primary;
-        }
-
-        @Override
-        public List<String> arguments() {
-            return this.primary.getFactory().arguments(this.player);
-        }
-
-        @Override
-        public List<String> arguments(final Class<? extends Descriptor> implementation) {
-            final Registration registration = this.registration(implementation);
-            if (registration == null) return null;
-            return registration.getFactory().arguments(this.player);
-        }
-
-    }
-
-
-
-    class ArgumentExecutionContext extends ExecutionContext {
-
-        private final ArgumentSection primary;
-
-        ArgumentExecutionContext(final CommandContext context) {
-            super(context);
-            this.primary = context.getSection(context.size() - 1);
-        }
-
-        @Override
-        public Registration registration() {
-            return this.primary.getRegistration();
-        }
-
-        @Override
-        public List<String> arguments() {
-            return this.primary.getArguments();
-        }
-
-        @Override
-        public List<String> arguments(final Class<? extends Descriptor> implementation) {
-            final CommandContext cc = (CommandContext) this.context;
-            final ArgumentSection section = cc.getSection(implementation);
-            if (section == null) return null;
-            return section.getArguments();
         }
 
     }

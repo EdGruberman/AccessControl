@@ -13,10 +13,8 @@ import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.permissions.Permission;
@@ -26,6 +24,8 @@ import org.bukkit.plugin.PluginManager;
 
 import edgruberman.bukkit.accesscontrol.Repository.GroupReference;
 import edgruberman.bukkit.accesscontrol.Repository.PrincipalReference;
+import edgruberman.bukkit.accesscontrol.events.AuthorityInitializeEvent;
+import edgruberman.bukkit.accesscontrol.events.AuthorityReleaseEvent;
 
 public final class Authority implements Listener {
 
@@ -53,7 +53,7 @@ public final class Authority implements Listener {
         this.implicitGroup = implicitGroup;
         for (final String group : defaultGroups) this.createGroup(group).setDefault(true);
 
-        plugin.getServer().getPluginManager().callEvent(new InitializeEvent(this));
+        plugin.getServer().getPluginManager().callEvent(new AuthorityInitializeEvent(this));
         for (final Player player : Bukkit.getOnlinePlayers()) this.getUser(player).apply();
     }
 
@@ -70,7 +70,7 @@ public final class Authority implements Listener {
     }
 
     void release() {
-        this.plugin.getServer().getPluginManager().callEvent(new ReleaseEvent(this));
+        this.plugin.getServer().getPluginManager().callEvent(new AuthorityReleaseEvent(this));
         for (final Player player : Bukkit.getOnlinePlayers()) this.getUser(player).detach();
         this.repository.release();
     }
@@ -205,65 +205,6 @@ public final class Authority implements Listener {
         final String name = quit.getPlayer().getName().toLowerCase(Locale.ENGLISH);
         final User user = this.getUser(name);
         user.detach();
-    }
-
-
-
-    /** custom descriptor plugins can register permission applicators in this event */
-    public static class InitializeEvent extends Event {
-
-        private final Authority authority;
-
-        private InitializeEvent(final Authority authority) {
-            this.authority = authority;
-        }
-
-        public Authority getAuthority() {
-            return this.authority;
-        }
-
-        private static final HandlerList handlers = new HandlerList();
-
-        public static HandlerList getHandlerList() {
-            return InitializeEvent.handlers;
-        }
-
-        @Override
-        public HandlerList getHandlers() {
-            return InitializeEvent.handlers;
-        }
-
-    }
-
-
-
-    /**
-     * custom descriptor plugins should clean-up permission applicators in this event
-     * and references to Principals should be released as they will no longer be valid
-     */
-    public static class ReleaseEvent extends Event {
-
-        private final Authority authority;
-
-        private ReleaseEvent(final Authority authority) {
-            this.authority = authority;
-        }
-
-        public Authority getAuthority() {
-            return this.authority;
-        }
-
-        private static final HandlerList handlers = new HandlerList();
-
-        public static HandlerList getHandlerList() {
-            return ReleaseEvent.handlers;
-        }
-
-        @Override
-        public HandlerList getHandlers() {
-            return ReleaseEvent.handlers;
-        }
-
     }
 
 }

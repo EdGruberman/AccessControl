@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
 import edgruberman.bukkit.accesscontrol.Main;
-import edgruberman.bukkit.accesscontrol.util.TokenizedExecutor;
 
 public class Check extends TokenizedExecutor {
 

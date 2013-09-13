@@ -10,7 +10,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
-import edgruberman.bukkit.accesscontrol.Registrar.DescriptorRegistrationEvent;
 import edgruberman.bukkit.accesscontrol.commands.Check;
 import edgruberman.bukkit.accesscontrol.commands.Default;
 import edgruberman.bukkit.accesscontrol.commands.Deny;
@@ -21,6 +20,9 @@ import edgruberman.bukkit.accesscontrol.commands.Revoke;
 import edgruberman.bukkit.accesscontrol.commands.Trace;
 import edgruberman.bukkit.accesscontrol.descriptors.Server;
 import edgruberman.bukkit.accesscontrol.descriptors.World;
+import edgruberman.bukkit.accesscontrol.events.AuthorityInitializeEvent;
+import edgruberman.bukkit.accesscontrol.events.AuthorityReleaseEvent;
+import edgruberman.bukkit.accesscontrol.events.DescriptorRegistrationEvent;
 import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 import edgruberman.bukkit.accesscontrol.repositories.YamlRepository;
 import edgruberman.bukkit.accesscontrol.util.CustomPlugin;
@@ -37,8 +39,6 @@ public final class Main extends CustomPlugin implements Listener {
 
 
 
-    private final List<Listener> applicators = new ArrayList<Listener>();
-
     @Override
     public void onLoad() {
         this.putConfigMinimum("8.0.0a0");
@@ -50,8 +50,10 @@ public final class Main extends CustomPlugin implements Listener {
         this.reloadConfig();
         Main.courier = ConfigurationCourier.Factory.create(this).setBase(this.loadConfig("language.yml")).setFormatCode("format-code").build();
 
-        // descriptor registrar
+        // default descriptors
         this.getServer().getPluginManager().registerEvents(this, this);
+
+        // descriptor registrar
         final Registrar registrar = new Registrar(this, this.getConfig().getStringList("permission-order"));
 
         // repository
@@ -102,6 +104,12 @@ public final class Main extends CustomPlugin implements Listener {
         Main.courier = null;
     }
 
+
+
+    // ---- default descriptors ----
+
+    private final List<Listener> applicators = new ArrayList<Listener>();
+
     @EventHandler
     public void onDescriptorRegistration(final DescriptorRegistrationEvent registration) {
         registration.register("server", Server.class, new Server.Factory());
@@ -109,7 +117,7 @@ public final class Main extends CustomPlugin implements Listener {
     }
 
     @EventHandler
-    public void onAuthorityInitialize(final Authority.InitializeEvent intialization) {
+    public void onAuthorityInitialize(final AuthorityInitializeEvent intialization) {
         final Listener serverApplicator = new Server.PermissionApplicator(intialization.getAuthority());
         this.getServer().getPluginManager().registerEvents(serverApplicator, this);
         this.applicators.add(serverApplicator);
@@ -120,7 +128,7 @@ public final class Main extends CustomPlugin implements Listener {
     }
 
     @EventHandler
-    public void onAuthorityRelease(final Authority.ReleaseEvent release) {
+    public void onAuthorityRelease(final AuthorityReleaseEvent release) {
         for (final Listener listener : this.applicators) HandlerList.unregisterAll(listener);
         this.applicators.clear();
     }

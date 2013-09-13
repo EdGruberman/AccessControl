@@ -1,4 +1,4 @@
-package edgruberman.bukkit.accesscontrol.util;
+package edgruberman.bukkit.accesscontrol.commands;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +19,16 @@ public abstract class TokenizedExecutor implements CommandExecutor {
         this.tokenizer.setQuoteChar('"');
     }
 
+    @Override
+    public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
+        return this.onCommand(sender, command, label, this.transform(args));
+    }
+
+    protected List<String> transform(final String... args) {
+        this.tokenizer.reset(TokenizedExecutor.join(args, " "));
+        return Arrays.asList(this.tokenizer.getTokenArray());
+    }
+
     /**
      * same as {@link CommandExecutor#onCommand(CommandSender, Command, String, String[]) CommandExecutor.onCommand} except with transformed arguments
      *
@@ -30,22 +40,17 @@ public abstract class TokenizedExecutor implements CommandExecutor {
      */
     protected abstract boolean onCommand(final CommandSender sender, final Command command, final String label, final List<String> args);
 
-    @Override
-    public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
-        return this.onCommand(sender, command, label, this.transform(args));
-    }
 
-    protected List<String> transform(final String... args) {
-        this.tokenizer.reset(TokenizedExecutor.join(args, " "));
-        return Arrays.asList(this.tokenizer.getTokenArray());
-    }
 
     protected static String join(final String[] args, final String delim) {
         if (args == null || args.length == 0) return "";
 
         final StringBuilder sb = new StringBuilder();
-        for (final String s : args) sb.append(s + delim);
-        sb.delete(sb.length() - delim.length(), sb.length());
+        for (int i = 0; i < args.length; i++) {
+            if (sb.length() > 0) sb.append(delim);
+            sb.append(args[i]);
+        }
+
         return sb.toString();
     }
 

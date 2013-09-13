@@ -15,7 +15,6 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 import edgruberman.bukkit.accesscontrol.Main;
 import edgruberman.bukkit.accesscontrol.messaging.Message;
 import edgruberman.bukkit.accesscontrol.messaging.Recipients;
-import edgruberman.bukkit.accesscontrol.util.TokenizedExecutor;
 
 public class Effective extends TokenizedExecutor {
 
