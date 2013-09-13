@@ -2,7 +2,6 @@ package edgruberman.bukkit.accesscontrol.messaging;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
@@ -11,34 +10,15 @@ import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.metadata.Metadatable;
 import org.bukkit.permissions.Permissible;
 
 /**
  * collection of one or more {@link org.bukkit.command.CommandSender
  * CommandSender}s
  * @author EdGruberman (ed@rjump.com)
- * @version 5.0.0
+ * @version 5.1.0
  */
 public abstract class Recipients {
-
-    public static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
-
-    /** retrieve "TimeZone" MetadataValue for CommandSender */
-    public static TimeZone getTimeZone(final CommandSender sender) {
-        if (!(sender instanceof Metadatable))
-            return Recipients.DEFAULT_TIME_ZONE;
-
-        final Metadatable meta = (Metadatable) sender;
-        final List<MetadataValue> values = meta.getMetadata("TimeZone");
-        if (values.size() == 0)
-            return Recipients.DEFAULT_TIME_ZONE;
-
-        return (TimeZone) values.get(0).value();
-    }
-
-
 
     protected Recipients() {}
 

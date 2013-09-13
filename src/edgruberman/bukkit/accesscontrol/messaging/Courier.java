@@ -16,7 +16,7 @@ import org.bukkit.plugin.Plugin;
 /**
  * handles message delivery and logging
  * @author EdGruberman (ed@rjump.com)
- * @version 7.0.0
+ * @version 7.0.1
  */
 public class Courier {
 
@@ -232,7 +232,6 @@ public class Courier {
          */
         public void send(final CommandSender sender, final String key, final Object... arguments) {
             final List<String> translated = this.translate(key);
-            if (translated.size() == 0) return;
             for (final String pattern : translated) this.sendMessage(sender, pattern, arguments);
         }
 
@@ -244,7 +243,6 @@ public class Courier {
          */
         public void broadcast(final String key, final Object... arguments) {
             final List<String> translated = this.translate(key);
-            if (translated.size() == 0) return;
             for (final String pattern : translated) this.broadcastMessage(pattern, arguments);
         }
 
@@ -256,7 +254,6 @@ public class Courier {
          */
         public void world(final World world, final String key, final Object... arguments) {
             final List<String> translated = this.translate(key);
-            if (translated.size() == 0) return;
             for (final String pattern : translated) this.worldMessage(world, pattern, arguments);
         }
 
@@ -268,7 +265,6 @@ public class Courier {
          */
         public void publish(final String permission, final String key, final Object... arguments) {
             final List<String> translated = this.translate(key);
-            if (translated.size() == 0) return;
             for (final String pattern : translated) this.publishMessage(permission, pattern, arguments);
         }
 

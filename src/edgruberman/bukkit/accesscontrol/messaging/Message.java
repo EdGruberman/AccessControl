@@ -14,15 +14,30 @@ import java.util.logging.LogRecord;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.metadata.MetadataValue;
+import org.bukkit.metadata.Metadatable;
 
 /**
  * {@link java.text.MessageFormat MessageFormat} that sets time zone of each date argument for target
  * @author EdGruberman (ed@rjump.com)
- * @version 4.0.0
+ * @version 4.1.0
  */
 public class Message extends MessageFormat {
 
     private static final long serialVersionUID = 1L;
+
+    public static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
+
+    /** retrieve "TimeZone" MetadataValue for CommandSender */
+    public static TimeZone getTimeZone(final CommandSender sender) {
+        if (!(sender instanceof Metadatable)) return Message.DEFAULT_TIME_ZONE;
+
+        final Metadatable meta = (Metadatable) sender;
+        final List<MetadataValue> values = meta.getMetadata("TimeZone");
+        if (values.size() == 0) return Message.DEFAULT_TIME_ZONE;
+
+        return (TimeZone) values.get(0).value();
+    }
 
 
 
@@ -53,21 +68,24 @@ public class Message extends MessageFormat {
 
     /** resolve arguments and apply to pattern adjusting as necessary for target */
     public StringBuffer format(final CommandSender target) {
-        // format all dates with time zone for target
-        TimeZone timeZone = null;
+        this.updateTimeZones(target);
+        final StringBuffer formatted = this.format(this.arguments, new StringBuffer(), null);
+        if (this.suffix != null) formatted.append(this.suffix.format(target));
+        return formatted;
+    }
+
+    /** format all dates with time zone for target */
+    protected void updateTimeZones(final CommandSender target) {
+        final TimeZone zone = Message.getTimeZone(target);
+
         final Format[] formats = this.getFormatsByArgumentIndex();
         for(int i = 0; i < formats.length; i++) {
             if (!(formats[i] instanceof DateFormat)) continue;
 
-            if (timeZone == null) timeZone = Recipients.getTimeZone(target);
             final DateFormat sdf = (DateFormat) formats[i];
-            sdf.setTimeZone(timeZone);
+            sdf.setTimeZone(zone);
             this.setFormatByArgumentIndex(i, sdf);
         }
-
-        final StringBuffer formatted = this.format(this.arguments, new StringBuffer(), null);
-        if (this.suffix != null) formatted.append(this.suffix.format(target));
-        return formatted;
     }
 
     /** @param suffix applied to last message in suffix chain to be formatted as a single message */
