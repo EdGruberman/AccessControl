@@ -9,7 +9,7 @@ public abstract class Parameter<T> {
     protected final int index;
     protected final T defaultValue;
 
-    protected Parameter(final Parameter.Factory<?, T> factory) {
+    protected Parameter(final Parameter.Factory<?, T, ?> factory) {
         this.name = factory.name;
         this.syntax = factory.syntax;
         this.index = factory.index;
@@ -39,7 +39,7 @@ public abstract class Parameter<T> {
 
 
 
-    public static abstract class Factory<P extends Parameter<Y>, Y> {
+    public static abstract class Factory<P extends Parameter<Y>, Y, F extends Factory<P, Y, F>> {
 
         protected String name;
         protected String syntax;
@@ -56,24 +56,28 @@ public abstract class Parameter<T> {
             this.syntax = courier.format("argument-name", name);
         }
 
-        public Factory<P, Y> setName(final String name) {
+        @SuppressWarnings("unchecked")
+        public F setName(final String name) {
             this.name = name;
-            return this;
+            return (F) this;
         }
 
-        public Factory<P, Y> setSyntax(final String syntax) {
+        @SuppressWarnings("unchecked")
+        public F setSyntax(final String syntax) {
             this.syntax = syntax;
-            return this;
+            return (F) this;
         }
 
-        public Factory<P, Y> setIndex(final int index) {
+        @SuppressWarnings("unchecked")
+        public F setIndex(final int index) {
             this.index = index;
-            return this;
+            return (F) this;
         }
 
-        public Factory<P, Y> setDefaultValue(final Y defaultValue) {
+        @SuppressWarnings("unchecked")
+        public F setDefaultValue(final Y defaultValue) {
             this.defaultValue = defaultValue;
-            return this;
+            return (F) this;
         }
 
         public abstract P build();

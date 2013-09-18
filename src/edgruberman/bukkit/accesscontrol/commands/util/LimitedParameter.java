@@ -8,7 +8,7 @@ public abstract class LimitedParameter<T> extends Parameter<T> {
 
     public final Collection<String> acceptable;
 
-    public LimitedParameter(final LimitedParameter.Factory<?, T> factory) {
+    public LimitedParameter(final LimitedParameter.Factory<?, T, ?> factory) {
         super(factory);
         this.acceptable = factory.acceptable;
     }
@@ -26,7 +26,7 @@ public abstract class LimitedParameter<T> extends Parameter<T> {
 
 
 
-    public static abstract class Factory<P extends Parameter<Y>, Y> extends Parameter.Factory<P, Y> {
+    public static abstract class Factory<P extends Parameter<Y>, Y, F extends LimitedParameter.Factory<P, Y, F>> extends Parameter.Factory<P, Y, F> {
 
         protected Collection<String> acceptable;
 
@@ -36,9 +36,10 @@ public abstract class LimitedParameter<T> extends Parameter<T> {
             this.acceptable = acceptable;
         }
 
-        public LimitedParameter.Factory<P, Y> setAcceptable(final Collection<String> acceptable) {
+        @SuppressWarnings("unchecked")
+        public F setAcceptable(final Collection<String> acceptable) {
             this.acceptable = acceptable;
-            return this;
+            return (F) this;
         }
 
     }

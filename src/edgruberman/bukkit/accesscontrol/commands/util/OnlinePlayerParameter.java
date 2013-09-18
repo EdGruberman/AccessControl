@@ -33,7 +33,7 @@ public class OnlinePlayerParameter extends Parameter<Player> {
 
 
 
-    public static class Factory extends Parameter.Factory<OnlinePlayerParameter, Player> {
+    public static class Factory extends Parameter.Factory<OnlinePlayerParameter, Player, OnlinePlayerParameter.Factory> {
 
         public static OnlinePlayerParameter.Factory create(final String name, final ConfigurationCourier courier, final Server server) {
             final OnlinePlayerParameter.Factory result = new OnlinePlayerParameter.Factory(name, courier);
@@ -55,30 +55,6 @@ public class OnlinePlayerParameter extends Parameter<Player> {
         @Override
         public OnlinePlayerParameter build() {
             return new OnlinePlayerParameter(this);
-        }
-
-        @Override
-        public OnlinePlayerParameter.Factory setName(final String name) {
-            super.setName(name);
-            return this;
-        }
-
-        @Override
-        public OnlinePlayerParameter.Factory setSyntax(final String syntax) {
-            super.setSyntax(syntax);
-            return this;
-        }
-
-        @Override
-        public OnlinePlayerParameter.Factory setIndex(final int index) {
-            super.setIndex(index);
-            return this;
-        }
-
-        @Override
-        public OnlinePlayerParameter.Factory setDefaultValue(final Player defaultValue) {
-            super.setDefaultValue(defaultValue);
-            return this;
         }
 
     }

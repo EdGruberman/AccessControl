@@ -31,7 +31,7 @@ public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
 
 
 
-    public static class Factory extends Parameter.Factory<OfflinePlayerParameter, OfflinePlayer> {
+    public static class Factory extends Parameter.Factory<OfflinePlayerParameter, OfflinePlayer, OfflinePlayerParameter.Factory> {
 
         public static OfflinePlayerParameter.Factory create(final String name, final ConfigurationCourier courier, final Server server) {
             final OfflinePlayerParameter.Factory result = new OfflinePlayerParameter.Factory(name, courier);
@@ -53,30 +53,6 @@ public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
         @Override
         public OfflinePlayerParameter build() {
             return new OfflinePlayerParameter(this);
-        }
-
-        @Override
-        public OfflinePlayerParameter.Factory setName(final String name) {
-            super.setName(name);
-            return this;
-        }
-
-        @Override
-        public OfflinePlayerParameter.Factory setSyntax(final String syntax) {
-            super.setSyntax(syntax);
-            return this;
-        }
-
-        @Override
-        public OfflinePlayerParameter.Factory setIndex(final int index) {
-            super.setIndex(index);
-            return this;
-        }
-
-        @Override
-        public OfflinePlayerParameter.Factory setDefaultValue(final OfflinePlayer defaultValue) {
-            super.setDefaultValue(defaultValue);
-            return this;
         }
 
     }

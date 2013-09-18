@@ -25,7 +25,7 @@ public class IntegerParameter extends Parameter<Integer> {
 
 
 
-    public static class Factory extends Parameter.Factory<IntegerParameter, Integer> {
+    public static class Factory extends Parameter.Factory<IntegerParameter, Integer, IntegerParameter.Factory> {
 
         public static IntegerParameter.Factory create(final String name, final ConfigurationCourier courier) {
             return new IntegerParameter.Factory(name, courier);
@@ -38,30 +38,6 @@ public class IntegerParameter extends Parameter<Integer> {
         @Override
         public IntegerParameter build() {
             return new IntegerParameter(this);
-        }
-
-        @Override
-        public IntegerParameter.Factory setName(final String name) {
-            super.setName(name);
-            return this;
-        }
-
-        @Override
-        public IntegerParameter.Factory setSyntax(final String syntax) {
-            super.setSyntax(syntax);
-            return this;
-        }
-
-        @Override
-        public IntegerParameter.Factory setIndex(final int index) {
-            super.setIndex(index);
-            return this;
-        }
-
-        @Override
-        public IntegerParameter.Factory setDefaultValue(final Integer defaultValue) {
-            super.setDefaultValue(defaultValue);
-            return this;
         }
 
     }
