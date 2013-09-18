@@ -20,7 +20,7 @@ import org.bukkit.metadata.Metadatable;
 /**
  * {@link java.text.MessageFormat MessageFormat} that sets time zone of each date argument for target
  * @author EdGruberman (ed@rjump.com)
- * @version 4.1.0
+ * @version 5.0.0
  */
 public class Message extends MessageFormat {
 
@@ -56,9 +56,9 @@ public class Message extends MessageFormat {
         this.suffix = null;
     }
 
-    public Confirmation deliver(final Recipients recipients) {
+    public Confirmation deliver(final RecipientList recipients) {
         final List<CommandSender> received = new ArrayList<CommandSender>();
-        for (final CommandSender target : recipients.targets()) {
+        for (final CommandSender target : recipients) {
             final String formatted = this.format(target).toString();
             target.sendMessage(formatted);
             received.add(target);

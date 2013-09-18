@@ -7,4 +7,5 @@ permission-order: # order of application; reverse order of precedence; last over
 implicit-permission:
   user: 'server.user.{0}'
   group: 'server.group.{0}'
+create-maximum: 5
 version: @VERSION@

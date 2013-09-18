@@ -1,4 +1,4 @@
-package edgruberman.bukkit.accesscontrol.commands;
+package edgruberman.bukkit.accesscontrol.commands.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,80 +62,80 @@ public abstract class ExecutionContext implements Context {
     /** @return command arguments that represent player context for the specified implementation; null when no registration applies */
     public abstract List<String> arguments(final Class<? extends Descriptor> implementation);
 
-}
 
 
 
 
+    public static class PlayerExecutionContext extends ExecutionContext {
 
-class PlayerExecutionContext extends ExecutionContext {
+        private final Player player;
+        private final Registration primary;
 
-    private final Player player;
-    private final Registration primary;
+        PlayerExecutionContext(final Player context, final List<Registration> registrations) {
+            super(new PlayerContext(context), registrations);
+            this.player = context;
 
-    PlayerExecutionContext(final Player context, final List<Registration> registrations) {
-        super(new PlayerContext(context), registrations);
-        this.player = context;
-
-        // identify first no argument registration to assume for primary
-        Registration found = null;
-        for (final Registration registration : this.registrations) {
-            if (registration.getFactory().required().size() == 0) {
-                found = registration;
-                break;
+            // identify first no argument registration to assume for primary
+            Registration found = null;
+            for (final Registration registration : this.registrations) {
+                if (registration.getFactory().required().size() == 0) {
+                    found = registration;
+                    break;
+                }
             }
+            this.primary = found;
         }
-        this.primary = found;
+
+        @Override
+        public Registration registration() {
+            return this.primary;
+        }
+
+        @Override
+        public List<String> arguments() {
+            return this.primary.getFactory().arguments(this.player);
+        }
+
+        @Override
+        public List<String> arguments(final Class<? extends Descriptor> implementation) {
+            final Registration registration = this.registration(implementation);
+            if (registration == null) return null;
+            return registration.getFactory().arguments(this.player);
+        }
+
     }
 
-    @Override
-    public Registration registration() {
-        return this.primary;
-    }
-
-    @Override
-    public List<String> arguments() {
-        return this.primary.getFactory().arguments(this.player);
-    }
-
-    @Override
-    public List<String> arguments(final Class<? extends Descriptor> implementation) {
-        final Registration registration = this.registration(implementation);
-        if (registration == null) return null;
-        return registration.getFactory().arguments(this.player);
-    }
-
-}
 
 
 
 
+    public static class ArgumentExecutionContext extends ExecutionContext {
 
-class ArgumentExecutionContext extends ExecutionContext {
+        private final ArgumentSection primary;
 
-    private final ArgumentSection primary;
+        ArgumentExecutionContext(final CommandContext context, final List<Registration> registrations) {
+            super(context, registrations);
+            this.primary = context.getSection(context.size() - 1);
+        }
 
-    ArgumentExecutionContext(final CommandContext context, final List<Registration> registrations) {
-        super(context, registrations);
-        this.primary = context.getSection(context.size() - 1);
-    }
+        @Override
+        public Registration registration() {
+            return this.primary.getRegistration();
+        }
 
-    @Override
-    public Registration registration() {
-        return this.primary.getRegistration();
-    }
+        @Override
+        public List<String> arguments() {
+            return this.primary.getArguments();
+        }
 
-    @Override
-    public List<String> arguments() {
-        return this.primary.getArguments();
-    }
+        @Override
+        public List<String> arguments(final Class<? extends Descriptor> implementation) {
+            final CommandContext cc = (CommandContext) this.context;
+            final ArgumentSection section = cc.getSection(implementation);
+            if (section == null) return null;
+            return section.getArguments();
+        }
 
-    @Override
-    public List<String> arguments(final Class<? extends Descriptor> implementation) {
-        final CommandContext cc = (CommandContext) this.context;
-        final ArgumentSection section = cc.getSection(implementation);
-        if (section == null) return null;
-        return section.getArguments();
     }
 
 }

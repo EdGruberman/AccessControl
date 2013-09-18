@@ -15,35 +15,38 @@ import edgruberman.bukkit.accesscontrol.Authority;
 import edgruberman.bukkit.accesscontrol.Context;
 import edgruberman.bukkit.accesscontrol.Descriptor;
 import edgruberman.bukkit.accesscontrol.Group;
-import edgruberman.bukkit.accesscontrol.Main;
 import edgruberman.bukkit.accesscontrol.Principal;
 import edgruberman.bukkit.accesscontrol.Registrar.Registration;
 import edgruberman.bukkit.accesscontrol.User;
-import edgruberman.bukkit.accesscontrol.util.JoinList;
+import edgruberman.bukkit.accesscontrol.commands.util.ExecutionContext;
+import edgruberman.bukkit.accesscontrol.commands.util.ExecutionRequest;
+import edgruberman.bukkit.accesscontrol.commands.util.JoinList;
+import edgruberman.bukkit.accesscontrol.commands.util.PermissionExecutor;
+import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 
 public class Trace extends PermissionExecutor {
 
     private final Server server;
 
-    public Trace(final Authority authority, final List<Registration> registrations, final Server server) {
-        super(authority, registrations);
+    public Trace(final ConfigurationCourier courier, final Authority authority, final List<Registration> registrations, final Server server) {
+        super(courier, authority, registrations, server);
         this.server = server;
     }
 
     // usage: /<command> permission [name] [type] [context]
     @Override
-    public boolean execute(final CommandSender sender, final String permission, final Principal principal, final ExecutionContext context) {
+    public boolean execute(final ExecutionRequest request, final String permission, final Principal principal, final ExecutionContext context) {
         // context
         final List<String> description = new JoinList<String>();
         for (final Registration registration : this.registrations) description.addAll(context.describe(registration.getImplementation()));
-        Main.courier.send(sender, "trace-context", description, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1);
+        this.courier.send(request.getSender(), "trace-context", description, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1);
 
         // trace
         final List<PermissionAssignment> assignments = this.trace(principal, context, permission);
         for (final PermissionAssignment assignment : assignments) {
             // 1 = permission, 2 = principal name, 3 = principal type(0=user|1=group), 4 = value(0=false|1=true), 5 = direct(0=inherited|1=direct)
             // 6 = inherited name, 7 = inherited type(-1=direct|0=user|1=group), 8 = context, 9 = relationship(0=permission|1=parent)
-            Main.courier.send(sender, "trace-assignment"
+            this.courier.send(request.getSender(), "trace-assignment"
                     , assignment.permission
                     , PermissionExecutor.properName(principal)
                     , principal.getClass().equals(User.class)?0:1
@@ -55,7 +58,7 @@ public class Trace extends PermissionExecutor {
                     , assignment.permission.equals(permission)?0:1
                     );
 
-            this.iterateRelationships(sender, principal, assignment, permission, assignment.permission, assignment.value);
+            this.iterateRelationships(request.getSender(), principal, assignment, permission, assignment.permission, assignment.value);
         }
 
         // default
@@ -64,7 +67,7 @@ public class Trace extends PermissionExecutor {
             final Permission instance = this.server.getPluginManager().getPermission(permission);
             final PermissionDefault defaultPermission = ( instance != null ? instance.getDefault() : Permission.DEFAULT_PERMISSION );
             final boolean result = defaultPermission.getValue( target != null ? target.isOp() : false );
-            Main.courier.send(sender, "trace-default", permission, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1, result?1:0, defaultPermission.name());
+            this.courier.send(request.getSender(), "trace-default", permission, PermissionExecutor.properName(principal), principal.getClass().equals(User.class)?0:1, result?1:0, defaultPermission.name());
         }
 
         if (!principal.isPersistent()) principal.delete();
@@ -81,7 +84,7 @@ public class Trace extends PermissionExecutor {
 
             // 1 = permission, 2 = principal name, 3 = principal type(0=user|1=group), 4 = parent name, 5 = parent value(0=false|1=true)
             // 6 = child name, 7 = child value(0=false|1=true), 8 = relationship(0=permission|1=parent)
-            Main.courier.send(sender, "trace-relationship"
+            this.courier.send(sender, "trace-relationship"
                     , assignment.permission
                     , PermissionExecutor.properName(principal)
                     , principal.getClass().equals(User.class)?0:1

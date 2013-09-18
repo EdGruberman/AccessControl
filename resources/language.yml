@@ -16,6 +16,11 @@ revoke-success: '§f-> §2Revoked §7{5,choice,-1#deny|1#grant} on §f{2} §7{3,
 revoke-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready defaults §f{1} §7in §f{4}' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context
 reload: '§f-> §2Reloaded §7{1} plugin' # 0 = generated, 1 = plugin name
 requires-player: '§f-> §cOnly in-game players§7 can use the §b/{1} §7command' # 0 = generated, 1 = label
-requires-argument: '§f-> §cMissing §7required argument§8: §3{2,choice,0#§o|1#§l}{1}' # 0 = generated, 1 = name, 2 = literal(0|1)
-unknown-value: '§f-> §eUnknown§7 value for §3§o{1}§8: §f{2}' # 0 = generated, 1 = name, 2 = value
+argument-missing: '§f-> §cMissing §7required argument§8: {1}' # 0 = generated, 1 = argument
+argument-unknown: '§f-> §eUnknown§7 argument for §3§o{1}§8: §f{2}' # 0 = generated, 1 = argument, 2 = value
+argument-name: '§3§o{0}' # 0 = name
+argument-limited-item: '§b{0}' # 0 = value
+argument-limited-delimiter: '§3|'
+argument-required: '{0}' # 0 = argument
+argument-optional: '§3[{0}§3]' # 0 = argument
 version: @VERSION@

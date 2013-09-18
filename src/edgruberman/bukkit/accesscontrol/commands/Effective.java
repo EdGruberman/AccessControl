@@ -4,50 +4,43 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 
 import org.bukkit.Server;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
-import edgruberman.bukkit.accesscontrol.Main;
+import edgruberman.bukkit.accesscontrol.commands.util.ArgumentParseException;
+import edgruberman.bukkit.accesscontrol.commands.util.ExecutionRequest;
+import edgruberman.bukkit.accesscontrol.commands.util.Executor;
+import edgruberman.bukkit.accesscontrol.commands.util.IntegerParameter;
+import edgruberman.bukkit.accesscontrol.commands.util.LowerCaseParameter;
+import edgruberman.bukkit.accesscontrol.commands.util.OnlinePlayerParameter;
+import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 import edgruberman.bukkit.accesscontrol.messaging.Message;
-import edgruberman.bukkit.accesscontrol.messaging.Recipients;
+import edgruberman.bukkit.accesscontrol.messaging.RecipientList;
 
-public class Effective extends TokenizedExecutor {
+public class Effective extends Executor {
 
     private final Server server;
+    private final IntegerParameter page;
+    private final OnlinePlayerParameter player;
+    private final LowerCaseParameter match;
 
-    public Effective(final Server server) {
+    public Effective(final ConfigurationCourier courier, final Server server) {
+        super(courier);
         this.server = server;
+
+        this.page = this.addOptional(IntegerParameter.Factory.create("page", courier).setDefaultValue(1));
+        this.player = this.addOptional(OnlinePlayerParameter.Factory.create("player", courier, server));
+        this.match = this.addOptional(LowerCaseParameter.Factory.create("match", courier));
     }
 
     // usage: /<command> [page] [player] [match]
     @Override
-    protected boolean onCommand(final CommandSender sender, final Command command, final String label, final List<String> args) {
-        if (args.size() < 2 && !(sender instanceof Player)) {
-            Main.courier.send(sender, "requires-argument", "player", 0);
-            return false;
-        }
-
-        final int page;
-        try {
-            page = ( args.size() >= 1 ? Integer.valueOf(args.get(0)) : 1 );
-        } catch (final NumberFormatException e) {
-            Main.courier.send(sender, "unknown-value", "page", args.get(0));
-            return false;
-        }
-
-        final String name = ( args.size() >= 2 ? args.get(1) : sender.getName() );
-        final Player player = this.server.getPlayer(name);
-        if (player == null) {
-            Main.courier.send(sender, "unknown-value", "player", name);
-            return false;
-        }
-
-        final String match = ( args.size() >= 3 ? args.get(2).toLowerCase(Locale.ENGLISH) : null);
+    protected boolean execute(final ExecutionRequest request) throws ArgumentParseException {
+        final Integer page = request.parse(this.page);
+        final Player player = request.parse(this.player);
+        final String match = request.parse(this.match);
 
         final List<PermissionAttachmentInfo> infos = new ArrayList<PermissionAttachmentInfo>(player.getEffectivePermissions());
         Collections.sort(infos, new AlphabeticalPermissionComparator());
@@ -56,20 +49,20 @@ public class Effective extends TokenizedExecutor {
         for (final PermissionAttachmentInfo info : infos) {
             if (match != null && !info.getPermission().contains(match)) continue;
             final String source = ( info.getAttachment() != null ? info.getAttachment().getPlugin().getName() : this.server.getName() );
-            final Message composed = Main.courier.compose("effective-permission", info.getPermission(), player.getName(), player.hasPermission(info.getPermission())?1:0, source);
+            final Message composed = this.courier.draft("effective-permission", info.getPermission(), player.getName(), player.hasPermission(info.getPermission())?1:0, source);
             if (composed != null) response.add(composed);
         }
 
         if (response.size() == 0) {
-            Main.courier.send(sender, "effective-none", match);
+            this.courier.send(request.getSender(), "effective-none", match);
             return true;
         }
 
-        final Message.Paginator paginator = new Message.Paginator(response, sender);
+        final Message.Paginator paginator = new Message.Paginator(response, request.getSender());
         final int count = paginator.count();
         final int index = Math.min(Math.max(0, page - 1), count - 1); // between 1 and max pages
-        for (final Message message : paginator.page(index)) Main.courier.submit(Recipients.Sender.create(sender), message);
-        Main.courier.send(sender, "effective-summary", index + 1, count);
+        for (final Message message : paginator.page(index)) this.courier.submit(RecipientList.Sender.create(request.getSender()), message);
+        this.courier.send(request.getSender(), "effective-summary", index + 1, count);
 
         return true;
     }

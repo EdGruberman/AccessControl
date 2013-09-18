@@ -29,8 +29,6 @@ import edgruberman.bukkit.accesscontrol.util.CustomPlugin;
 
 public final class Main extends CustomPlugin implements Listener {
 
-    public static ConfigurationCourier courier;
-
     private static Authority authority = null;
 
     public static Authority getAuthority() {
@@ -42,13 +40,13 @@ public final class Main extends CustomPlugin implements Listener {
     @Override
     public void onLoad() {
         this.putConfigMinimum("8.0.0a0");
-        this.putConfigMinimum("language.yml", "8.0.0b50");
+        this.putConfigMinimum("language.yml", "8.0.0b59");
     }
 
     @Override
     public void onEnable() {
         this.reloadConfig();
-        Main.courier = ConfigurationCourier.Factory.create(this).setBase(this.loadConfig("language.yml")).setFormatCode("format-code").build();
+        final ConfigurationCourier courier = ConfigurationCourier.Factory.create(this).setBase(this.loadConfig("language.yml")).setFormatCode("format-code").build();
 
         // default descriptors
         this.getServer().getPluginManager().registerEvents(this, this);
@@ -77,18 +75,18 @@ public final class Main extends CustomPlugin implements Listener {
         this.getLogger().log(Level.CONFIG, "Loaded {0} groups and {1} users", new Object[] { Main.authority.getGroups().size(), Main.authority.getUsers().size() });
 
         // analysis commands
-        this.getCommand("accesscontrol:check").setExecutor(new Check(this.getServer()));
-        this.getCommand("accesscontrol:effective").setExecutor(new Effective(this.getServer()));
-        this.getCommand("accesscontrol:trace").setExecutor(new Trace(Main.authority, registrar.registrations(), this.getServer()));
-        this.getCommand("accesscontrol:default").setExecutor(new Default(this.getServer()));
+        this.getCommand("accesscontrol:check").setExecutor(new Check(courier, this.getServer()));
+        this.getCommand("accesscontrol:effective").setExecutor(new Effective(courier, this.getServer()));
+        this.getCommand("accesscontrol:trace").setExecutor(new Trace(courier, Main.authority, registrar.registrations(), this.getServer()));
+        this.getCommand("accesscontrol:default").setExecutor(new Default(courier, this.getServer()));
 
         // permission commands
-        this.getCommand("accesscontrol:deny").setExecutor(new Deny(Main.authority, registrar.registrations()));
-        this.getCommand("accesscontrol:grant").setExecutor(new Grant(Main.authority, registrar.registrations()));
-        this.getCommand("accesscontrol:revoke").setExecutor(new Revoke(Main.authority, registrar.registrations()));
+        this.getCommand("accesscontrol:deny").setExecutor(new Deny(courier, Main.authority, registrar.registrations(), this.getServer()));
+        this.getCommand("accesscontrol:grant").setExecutor(new Grant(courier, Main.authority, registrar.registrations(), this.getServer()));
+        this.getCommand("accesscontrol:revoke").setExecutor(new Revoke(courier, Main.authority, registrar.registrations(), this.getServer()));
 
         // general commands
-        this.getCommand("accesscontrol:reload").setExecutor(new Reload(this));
+        this.getCommand("accesscontrol:reload").setExecutor(new Reload(courier, this));
     }
 
     @Override
@@ -100,8 +98,6 @@ public final class Main extends CustomPlugin implements Listener {
         }
 
         HandlerList.unregisterAll((Listener) this);
-
-        Main.courier = null;
     }
 
 

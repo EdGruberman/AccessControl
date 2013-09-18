@@ -1,4 +1,4 @@
-package edgruberman.bukkit.accesscontrol.util;
+package edgruberman.bukkit.accesscontrol.commands.util;
 
 import java.text.FieldPosition;
 import java.text.MessageFormat;
@@ -12,7 +12,7 @@ import org.bukkit.configuration.ConfigurationSection;
  * allows object references to be stored for lazy MessageFormat formatting
  *
  * @author EdGruberman (ed@rjump.com)
- * @version 1.5.0
+ * @version 1.6.0
  */
 public class JoinList<T> extends ArrayList<T> {
 
@@ -41,7 +41,14 @@ public class JoinList<T> extends ArrayList<T> {
     }
 
     public static String join(final Collection<?> collection, final String delimiter, final String item, final String format) {
-        final JoinList<Object> list = new JoinList<Object>(format, item, delimiter, collection);
+        final JoinList<Object> list = new JoinList<Object>(format, item, delimiter);
+        list.addAll(collection);
+        return list.toString();
+    }
+
+    public static String join(final Collection<?> collection, final ConfigurationSection config, final String prefix) {
+        final JoinList<Object> list = new JoinList<Object>(config, prefix);
+        list.addAll(collection);
         return list.toString();
     }
 
@@ -61,20 +68,18 @@ public class JoinList<T> extends ArrayList<T> {
         this.delimiter = delimiter;
     }
 
-    public JoinList(final String format, final String item, final String delimiter, final Collection<? extends T> collection) {
-        this(format, item, delimiter);
-        this.addAll(collection);
-    }
-
     public JoinList(final ConfigurationSection config) {
-        this(config.getString(JoinList.CONFIG_KEY_FORMAT, JoinList.DEFAULT_FORMAT)
-                , config.getString(JoinList.CONFIG_KEY_ITEM, JoinList.DEFAULT_ITEM)
-                , config.getString(JoinList.CONFIG_KEY_DELIMITER, JoinList.DEFAULT_DELIMITER));
+        this(config, "");
     }
 
-    public JoinList(final ConfigurationSection config, final Collection<? extends T> collection) {
-        this(config);
-        this.addAll(collection);
+    public JoinList(final ConfigurationSection config, final String prefix) {
+        this(config, prefix, JoinList.DEFAULT_FORMAT, JoinList.DEFAULT_ITEM, JoinList.DEFAULT_DELIMITER);
+    }
+
+    public JoinList(final ConfigurationSection config, final String prefix, final String defaultFormat, final String defaultItem, final String defaultDelimiter) {
+        this(config.getString(prefix + JoinList.CONFIG_KEY_FORMAT, defaultFormat)
+                , config.getString(prefix + JoinList.CONFIG_KEY_ITEM, defaultItem)
+                , config.getString(prefix + JoinList.CONFIG_KEY_DELIMITER, defaultDelimiter));
     }
 
     public boolean add(final Object... arguments) {

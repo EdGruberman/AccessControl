@@ -1,44 +1,35 @@
 package edgruberman.bukkit.accesscontrol.commands;
 
-import java.util.List;
-import java.util.Locale;
-
 import org.bukkit.Server;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
-import edgruberman.bukkit.accesscontrol.Main;
+import edgruberman.bukkit.accesscontrol.commands.util.ArgumentParseException;
+import edgruberman.bukkit.accesscontrol.commands.util.ExecutionRequest;
+import edgruberman.bukkit.accesscontrol.commands.util.Executor;
+import edgruberman.bukkit.accesscontrol.commands.util.LowerCaseParameter;
+import edgruberman.bukkit.accesscontrol.commands.util.OnlinePlayerParameter;
+import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 
-public class Check extends TokenizedExecutor {
+public class Check extends Executor {
 
     private final Server server;
+    private final LowerCaseParameter permission;
+    private final OnlinePlayerParameter player;
 
-    public Check(final Server server) {
+    public Check(final ConfigurationCourier courier, final Server server) {
+        super(courier);
         this.server = server;
+
+        this.permission = this.addRequired(LowerCaseParameter.Factory.create("permission", courier));
+        this.player = this.addOptional(OnlinePlayerParameter.Factory.create("player", courier, server));
     }
 
     // usage: /<command> permission [player]
     @Override
-    protected boolean onCommand(final CommandSender sender, final Command command, final String label, final List<String> args) {
-        if (args.size() < 1) {
-            Main.courier.send(sender, "requires-argument", "permission", 0);
-            return false;
-        }
-
-        if (args.size() < 2 && !(sender instanceof Player)) {
-            Main.courier.send(sender, "requires-argument", "player", 0);
-            return false;
-        }
-
-        final String permission = args.get(0).toLowerCase(Locale.ENGLISH);
-        final String name = ( args.size() >= 2 ? args.get(1) : sender.getName() );
-        final Player player = this.server.getPlayer(name);
-        if (player == null) {
-            Main.courier.send(sender, "unknown-value", "player", name);
-            return false;
-        }
+    protected boolean execute(final ExecutionRequest request) throws ArgumentParseException {
+        final String permission = request.parse(this.permission);
+        final Player player = request.parse(this.player);
 
         String source = null;
         for (final PermissionAttachmentInfo info : player.getEffectivePermissions()) {
@@ -49,7 +40,7 @@ public class Check extends TokenizedExecutor {
         }
         if (source == null) source = this.server.getName();
 
-        Main.courier.send(sender, "check", permission, player.getName(), player.hasPermission(permission)?1:0, player.isPermissionSet(permission)?1:0, source);
+        this.courier.send(request.getSender(), "check", permission, player.getName(), player.hasPermission(permission)?1:0, player.isPermissionSet(permission)?1:0, source);
         return true;
     }
 

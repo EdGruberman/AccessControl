@@ -8,6 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -16,129 +17,172 @@ import org.bukkit.plugin.Plugin;
 /**
  * handles message delivery and logging
  * @author EdGruberman (ed@rjump.com)
- * @version 7.0.1
+ * @version 8.0.0
  */
-public class Courier {
-
-    protected final Logger logger;
-    protected final boolean timestamp;
-
-    protected Courier(final Courier.Factory parameters) {
-        this.logger = parameters.logger;
-        this.timestamp = parameters.timestamp;
-    }
-
-    public Logger getLogger() {
-        return this.logger;
-    }
-
-    /**
-     * @return true if all messages will have their arguments automatically
-     * prepended with the current date/time
-     */
-    public boolean getTimestamp() {
-        return this.timestamp;
-    }
+public interface Courier {
 
     /** format a pattern with supplied arguments */
-    public String formatMessage(final String pattern, final Object... arguments) {
-        return MessageFormat.format(pattern, arguments);
-    }
+    public String format(final String message, final Object... arguments);
 
     /**
-     * preliminary Message construction before formatting for target
-     * recipient (timestamp argument prepended if configured)
+     * preliminary Message construction before formatting for target recipient
      * @param pattern message text that contains format elements
      */
-    public Message draft(final String pattern, final Object... arguments) {
-        final Message.Factory factory = Message.Factory.create(pattern, arguments);
-        if (this.timestamp) factory.timestamp();
-        return factory.build();
-    }
+    Message draft(final String message, final Object... arguments);
 
-    /**
-     * deliver message to recipients and record log entry
-     * (this will not timestamp the message)
-     */
-    public void submit(final Recipients recipients, final Message message) {
-        final Message.Confirmation confirmation = message.deliver(recipients);
-        this.logger.log(confirmation.toLogRecord());
-    }
+    /** deliver message to recipients and record log entry */
+    void submit(final RecipientList recipients, final Message message);
 
     /** deliver message to individual player */
-    public void sendMessage(final CommandSender sender, final String pattern, final Object... arguments) {
-        final Recipients recipients = Recipients.Sender.create(sender);
-        final Message message = this.draft(pattern, arguments);
-        this.submit(recipients, message);
-    }
+    void send(final CommandSender sender, final String message, final Object... arguments);
 
-    /** deliver message to all players on server */
-    public void broadcastMessage(final String pattern, final Object... arguments) {
-        final Recipients recipients = new Recipients.ServerPlayers();
-        final Message message = this.draft(pattern, arguments);
-        this.submit(recipients, message);
-    }
+    /** deliver message to players on server */
+    void broadcast(final String message, final Object... arguments);
 
     /** deliver message to players in a world */
-    public void worldMessage(final World world, final String pattern, final Object... arguments) {
-        final Recipients recipients = new Recipients.WorldPlayers(world);
-        final Message message = this.draft(pattern, arguments);
-        this.submit(recipients, message);
-    }
+    void announce(final World world, final String message, final Object... arguments);
 
-    /** deliver message to players with a permission */
-    public void publishMessage(final String permission, final String pattern, final Object... arguments) {
-        final Recipients recipients = new Recipients.PermissionSubscribers(permission);
-        final Message message = this.draft(pattern, arguments);
-        this.submit(recipients, message);
-    }
+    /** deliver message to players that have a permission */
+    void publish(final String permission, final String message, final Object... arguments);
 
 
 
-    public static class Factory {
 
-        /** prepends a timestamp to all messages */
-        public static Courier.Factory create(final Logger logger) {
-            return new Courier.Factory(logger);
-        }
+
+    /**
+     * message content is defined by a MessageFormat pattern
+     * @version 8.0.0
+     */
+    public class PatternCourier implements Courier {
+
+        public static final boolean DEFAULT_TIMESTAMP = true;
 
         protected final Logger logger;
-        protected boolean timestamp;
+        protected final Server server;
+        protected final boolean timestamp;
 
-        protected Factory(final Logger logger) {
-            this.logger = logger;
-            this.setTimestamp(true);
+        protected PatternCourier(final PatternCourier.Factory parameters) {
+            this.logger = parameters.logger;
+            this.server = parameters.server;
+            this.timestamp = parameters.timestamp;
+        }
+
+        public Logger getLogger() {
+            return this.logger;
         }
 
         /**
-         * @param timestamp true to prepend timestamp to arguments
-         * of all messages
+         * @return true if all messages will have their arguments automatically
+         * prepended with the current date/time
          */
-        public Courier.Factory setTimestamp(final boolean timestamp) {
-            this.timestamp = true;
-            return this;
+        public boolean getTimestamp() {
+            return this.timestamp;
         }
 
-        public Courier build() {
-            return new Courier(this);
+        /** format a pattern with supplied arguments */
+        @Override
+        public String format(final String pattern, final Object... arguments) {
+            return MessageFormat.format(pattern, arguments);
+        }
+
+        /** {@inheritDoc} (timestamp argument prepended if configured) */
+        @Override
+        public Message draft(final String pattern, final Object... arguments) {
+            final Message.Factory factory = Message.Factory.create(pattern, arguments);
+            if (this.timestamp) factory.timestamp();
+            return factory.build();
+        }
+
+        @Override
+        public void submit(final RecipientList recipients, final Message message) {
+            final Message.Confirmation confirmation = message.deliver(recipients);
+            this.logger.log(confirmation.toLogRecord());
+        }
+
+        @Override
+        public void send(final CommandSender sender, final String pattern, final Object... arguments) {
+            final RecipientList recipients = RecipientList.Sender.create(sender);
+            final Message message = this.draft(pattern, arguments);
+            this.submit(recipients, message);
+        }
+
+        @Override
+        public void broadcast(final String pattern, final Object... arguments) {
+            final RecipientList recipients = RecipientList.ServerPlayers.create(this.server);
+            final Message message = this.draft(pattern, arguments);
+            this.submit(recipients, message);
+        }
+
+        @Override
+        public void announce(final World world, final String pattern, final Object... arguments) {
+            final RecipientList recipients = RecipientList.WorldPlayers.create(world);
+            final Message message = this.draft(pattern, arguments);
+            this.submit(recipients, message);
+        }
+
+        @Override
+        public void publish(final String permission, final String pattern, final Object... arguments) {
+            final RecipientList recipients = RecipientList.Subscribers.create(this.server.getPluginManager(), permission);
+            final Message message = this.draft(pattern, arguments);
+            this.submit(recipients, message);
+        }
+
+
+
+
+
+        public static class Factory {
+
+            public static PatternCourier.Factory create(final Logger logger, final Server server) {
+                return new Factory().setLogger(logger).setServer(server);
+            }
+
+
+
+            protected Logger logger;
+            protected Server server;
+            protected boolean timestamp = PatternCourier.DEFAULT_TIMESTAMP;
+
+            public Factory() {}
+
+            /** @param logger where to report events */
+            public PatternCourier.Factory setLogger(final Logger logger) {
+                this.logger = logger;
+                return this;
+            }
+
+            /** @param server used for recipient definitions */
+            public PatternCourier.Factory setServer(final Server server) {
+                this.server = server;
+                return this;
+            }
+
+            /** @param timestamp true to prepend timestamps to messages */
+            public PatternCourier.Factory setTimestamp(final boolean timestamp) {
+                this.timestamp = true;
+                return this;
+            }
+
+            public PatternCourier build() {
+                return new PatternCourier(this);
+            }
+
         }
 
     }
 
 
 
+
+
     /**
-     * handles message delivery and logging; uses keys to reference message
-     * patterns stored in a
-     * {@link org.bukkit.configuration.ConfigurationSection
-     * ConfigurationSection}
-     * @version 7.0.0
+     * message content patterns are referenced by configuration keys
+     * @version 8.0.0
      */
-    public static class ConfigurationCourier extends Courier {
+    public static class ConfigurationCourier extends PatternCourier {
 
         protected static final char DEFAULT_FORMAT_CODE = ChatColor.COLOR_CHAR;
 
-        /** message pattern container */
         protected final ConfigurationSection base;
         protected final char formatCode;
 
@@ -153,122 +197,13 @@ public class Courier {
             return this.base;
         }
 
-        /** @return section at path relative to {@link #getBase base} */
-        public ConfigurationSection getSection(final String path) {
-            return this.base.getConfigurationSection(path);
-        }
-
         /** @return prefix that designates format code in message patterns */
         public char getFormatCode() {
             return this.formatCode;
         }
 
-        /**
-         * @param key path relative to {@link #getBase base} that contains
-         * message pattern
-         * @return pattern at key translated into Minecraft formatting codes;
-         * empty list if key contains null or an empty String
-         */
-        public List<String> translate(final String key) {
-            final List<String> result = this.getStringList(key);
-            if (result.size() == 0 || result.get(0) == null || result.get(0).equals("")) {
-                this.logger.log(Level.FINEST, "String value not found for {0} in {1}", new Object[] { key, ( this.base.getCurrentPath().equals("") ? "(root)" : this.base.getCurrentPath() ) });
-                return Collections.emptyList();
-            }
-
-            if (this.formatCode != ChatColor.COLOR_CHAR) {
-                for (int i = 0; i < result.size(); i++) {
-                    final String translated = ChatColor.translateAlternateColorCodes(this.formatCode, result.get(i));
-                    result.set(i, translated);
-                }
-            }
-
-            return result;
-        }
-
-        /**
-         * preliminary Message construction before formatting for target
-         * recipient (timestamp argument prepended if configured)
-         * @param key path relative to {@link #getBase base} that contains
-         * message pattern
-         * @return composed Message, null if key is null or empty string
-         */
-        public Message compose(final String key, final Object... arguments) {
-            final List<String> translated = this.translate(key);
-
-            Message result = null;
-            for (final String pattern : translated) {
-                final Message drafted = this.draft(pattern, arguments);
-                if (result == null) {
-                    result = drafted;
-                } else {
-                    result.append(drafted);
-                }
-            }
-
-            return result;
-        }
-
-        /**
-         * retrieve a message pattern from the configuration and format with
-         * supplied arguments
-         * @param key path relative to {@link #getBase base} that contains
-         * message pattern
-         */
-        public List<String> format(final String key, final Object... arguments) {
-            final List<String> result = this.translate(key);
-            for (int i = 0; i < result.size(); i++) {
-                final String formatted = this.formatMessage(result.get(i), arguments);
-                result.set(i, formatted);
-            }
-            return result;
-        }
-
-        /**
-         * deliver message to individual player
-         * @param key path relative to {@link #getBase base} that contains
-         * message pattern (null and empty strings patterns are silently
-         * ignored and not sent)
-         */
-        public void send(final CommandSender sender, final String key, final Object... arguments) {
-            final List<String> translated = this.translate(key);
-            for (final String pattern : translated) this.sendMessage(sender, pattern, arguments);
-        }
-
-        /**
-         * deliver message to all players on server
-         * @param key path relative to {@link #getBase base} that contains
-         * message pattern (null and missing patterns are silently ignored
-         * and not sent)
-         */
-        public void broadcast(final String key, final Object... arguments) {
-            final List<String> translated = this.translate(key);
-            for (final String pattern : translated) this.broadcastMessage(pattern, arguments);
-        }
-
-        /**
-         * deliver message to players in a world
-         * @param key path relative to {@link #getBase base} that contains
-         * message pattern (null and missing patterns are silently ignored
-         * and not sent)
-         */
-        public void world(final World world, final String key, final Object... arguments) {
-            final List<String> translated = this.translate(key);
-            for (final String pattern : translated) this.worldMessage(world, pattern, arguments);
-        }
-
-        /**
-         * deliver message to players with a permission
-         * @param key path relative to {@link #getBase base} that contains
-         * message pattern (null and missing patterns are silently ignored
-         * and not sent)
-         */
-        public void publish(final String permission, final String key, final Object... arguments) {
-            final List<String> translated = this.translate(key);
-            for (final String pattern : translated) this.publishMessage(permission, pattern, arguments);
-        }
-
-        protected List<String> getStringList(final String key) {
+        /** @return empty list if key not found or key is not a string */
+        public List<String> getStringList(final String key) {
             if (this.base.isList(key))
                 return this.base.getStringList(key);
 
@@ -278,25 +213,124 @@ public class Courier {
             return Collections.emptyList();
         }
 
+        /**
+         * retrieve pattern at key and translate alternate codes into Minecraft formatting codes
+         * @param key path relative to {@link #getBase base} that contains
+         * message pattern
+         * @return null if empty
+         */
+        public String translate(final String key) {
+            final List<String> result = this.getStringList(key);
+            if (result.isEmpty() || result.get(0) == null) {
+                this.logger.log(Level.FINEST, "String value not found for {0}{1}{2}", new Object[] { this.base.getCurrentPath(), this.base.getRoot().options().pathSeparator(), key });
+                return null;
+            }
+
+            final StringBuilder sb = new StringBuilder();
+            for (final String s : result) {
+                if (sb.length() > 0) sb.append("\n");
+
+                if (this.formatCode != ChatColor.COLOR_CHAR) {
+                    final String translated = ChatColor.translateAlternateColorCodes(this.formatCode, s);
+                    sb.append(translated);
+
+                } else {
+                    sb.append(s);
+                }
+            }
+
+            return sb.toString();
+        }
+
+        /**
+         * retrieve a message pattern from the configuration and format with
+         * supplied arguments
+         * @param key path relative to {@link #getBase base} that contains
+         * message pattern
+         */
+        @Override
+        public String format(final String key, final Object... arguments) {
+            final String pattern = this.translate(key);
+            return super.format(pattern, arguments);
+     }
+
+        /**
+         * {@inheritDoc}
+         * @param key path relative to {@link #getBase base} that contains
+         * message pattern
+         * @return null if key does not exist or is null
+         */
+        @Override
+        public Message draft(final String key, final Object... arguments) {
+            final String pattern = this.translate(key);
+            return super.draft(pattern, arguments);
+        }
+
+        /**
+         * {@inheritDoc}
+         * @param key path relative to {@link #getBase base} that contains
+         * message pattern (null and empty strings patterns are silently
+         * ignored and not sent)
+         */
+        @Override
+        public void send(final CommandSender sender, final String key, final Object... arguments) {
+            super.send(sender, key, arguments);
+        }
+
+        /**
+         * {@inheritDoc}
+         * @param key path relative to {@link #getBase base} that contains
+         * message pattern (null and missing patterns are silently ignored
+         * and not sent)
+         */
+        @Override
+        public void broadcast(final String key, final Object... arguments) {
+            super.broadcast(key, arguments);
+        }
+
+        /**
+         * {@inheritDoc}
+         * @param key path relative to {@link #getBase base} that contains
+         * message pattern (null and missing patterns are silently ignored
+         * and not sent)
+         */
+        @Override
+        public void announce(final World world, final String key, final Object... arguments) {
+            super.announce(world, key, arguments);
+        }
+
+        /**
+         * {@inheritDoc}
+         * @param key path relative to {@link #getBase base} that contains
+         * message pattern (null and missing patterns are silently ignored
+         * and not sent)
+         */
+        @Override
+        public void publish(final String permission, final String key, final Object... arguments) {
+            super.publish(permission, key, arguments);
+        }
 
 
-        public static class Factory extends Courier.Factory {
+
+
+
+        public static class Factory extends PatternCourier.Factory {
 
             /**
              * prepends a timestamp to all messages and retrieves message
              * patterns from plugin root configuration
              */
             public static ConfigurationCourier.Factory create(final Plugin plugin) {
-                return new ConfigurationCourier.Factory(plugin.getLogger(), plugin.getConfig());
+                return new ConfigurationCourier.Factory()
+                    .setLogger(plugin.getLogger())
+                    .setServer(plugin.getServer())
+                    .setBase(plugin.getConfig());
             }
 
             protected ConfigurationSection base;
             protected char formatCode;
 
-            protected Factory(final Logger logger, final ConfigurationSection section) {
-                super(logger);
-                this.setBase(section);
-            }
+            public Factory() {}
 
             /** @param section base section containing message patterns */
             public ConfigurationCourier.Factory setBase(final ConfigurationSection section) {
@@ -305,7 +339,7 @@ public class Courier {
                 return this;
             }
 
-            /** @param path path to section relative to current base section containing message patterns */
+            /** @param path relative to current base for message patterns */
             public ConfigurationCourier.Factory setPath(final String path) {
                 final ConfigurationSection section = this.base.getConfigurationSection(path);
                 if (section == null) throw new IllegalArgumentException("ConfigurationSection not found: " + path);
@@ -313,10 +347,7 @@ public class Courier {
                 return this;
             }
 
-            /**
-             * @param key path to format code prefix character in base
-             * configuration
-             */
+            /** @param key path to format code prefix character in base */
             public ConfigurationCourier.Factory setFormatCode(final String key) {
                 final String value = this.base.getString(key);
                 if (value == null) throw new IllegalArgumentException("Color code not found: " + this.base.getCurrentPath() + this.base.getRoot().options().pathSeparator() + key);
@@ -335,14 +366,26 @@ public class Courier {
             }
 
             @Override
-            public ConfigurationCourier.Factory setTimestamp(final boolean timestamp) {
-                super.setTimestamp(timestamp);
+            public ConfigurationCourier build() {
+                return new ConfigurationCourier(this);
+            }
+
+            @Override
+            public ConfigurationCourier.Factory setLogger(final Logger logger) {
+                super.setLogger(logger);
                 return this;
             }
 
             @Override
-            public ConfigurationCourier build() {
-                return new ConfigurationCourier(this);
+            public ConfigurationCourier.Factory setServer(final Server server) {
+                super.setServer(server);
+                return this;
+            }
+
+            @Override
+            public ConfigurationCourier.Factory setTimestamp(final boolean timestamp) {
+                super.setTimestamp(timestamp);
+                return this;
             }
 
         }
