@@ -21,7 +21,7 @@ public class RemainingParameter extends Parameter<List<String>> {
 
 
 
-    public static class Factory extends Parameter.Factory<RemainingParameter, List<String>> {
+    public static class Factory extends Parameter.Factory<RemainingParameter, List<String>, RemainingParameter.Factory> {
 
         public static RemainingParameter.Factory create(final String name, final ConfigurationCourier courier) {
             return new RemainingParameter.Factory(name, courier);
@@ -34,30 +34,6 @@ public class RemainingParameter extends Parameter<List<String>> {
         @Override
         public RemainingParameter build() {
             return new RemainingParameter(this);
-        }
-
-        @Override
-        public RemainingParameter.Factory setName(final String name) {
-            super.setName(name);
-            return this;
-        }
-
-        @Override
-        public RemainingParameter.Factory setSyntax(final String syntax) {
-            super.setSyntax(syntax);
-            return this;
-        }
-
-        @Override
-        public RemainingParameter.Factory setIndex(final int index) {
-            super.setIndex(index);
-            return this;
-        }
-
-        @Override
-        public RemainingParameter.Factory setDefaultValue(final List<String> defaultValue) {
-            super.setDefaultValue(defaultValue);
-            return this;
         }
 
     }

@@ -17,7 +17,7 @@ public class StringParameter extends Parameter<String> {
 
 
 
-    public static class Factory extends Parameter.Factory<StringParameter, String> {
+    public static class Factory extends Parameter.Factory<StringParameter, String, StringParameter.Factory> {
 
         public static StringParameter.Factory create(final String name, final ConfigurationCourier courier) {
             return new StringParameter.Factory(name, courier);
@@ -30,30 +30,6 @@ public class StringParameter extends Parameter<String> {
         @Override
         public StringParameter build() {
             return new StringParameter(this);
-        }
-
-        @Override
-        public StringParameter.Factory setName(final String name) {
-            super.setName(name);
-            return this;
-        }
-
-        @Override
-        public StringParameter.Factory setSyntax(final String syntax) {
-            super.setSyntax(syntax);
-            return this;
-        }
-
-        @Override
-        public StringParameter.Factory setIndex(final int index) {
-            super.setIndex(index);
-            return this;
-        }
-
-        @Override
-        public StringParameter.Factory setDefaultValue(final String defaultValue) {
-            super.setDefaultValue(defaultValue);
-            return this;
         }
 
     }

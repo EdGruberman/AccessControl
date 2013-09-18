@@ -31,7 +31,7 @@ public abstract class Executor implements CommandExecutor {
         this.tokenizer.setQuoteChar('"');
     }
 
-    protected <P extends Parameter<T>, T> P addRequired(final Parameter.Factory<P, T> factory) {
+    protected <P extends Parameter<T>, T> P addRequired(final Parameter.Factory<P, T, ?> factory) {
         factory.setSyntax(this.courier.format("argument-required", factory.syntax));
         factory.setIndex(this.parameters.size());
 
@@ -40,7 +40,7 @@ public abstract class Executor implements CommandExecutor {
         return result;
     }
 
-    protected <P extends Parameter<T>, T> P addOptional(final Parameter.Factory<P, T> factory) {
+    protected <P extends Parameter<T>, T> P addOptional(final Parameter.Factory<P, T, ?> factory) {
         factory.setSyntax(this.courier.format("argument-optional", factory.syntax));
         factory.setIndex(this.parameters.size());
 

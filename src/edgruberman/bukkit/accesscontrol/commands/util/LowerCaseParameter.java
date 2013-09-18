@@ -24,7 +24,7 @@ public class LowerCaseParameter extends Parameter<String> {
 
 
 
-    public static class Factory extends Parameter.Factory<LowerCaseParameter, String> {
+    public static class Factory extends Parameter.Factory<LowerCaseParameter, String, LowerCaseParameter.Factory> {
 
         public static LowerCaseParameter.Factory create(final String name, final ConfigurationCourier courier) {
             final LowerCaseParameter.Factory result = new LowerCaseParameter.Factory(name, courier);
@@ -46,30 +46,6 @@ public class LowerCaseParameter extends Parameter<String> {
         @Override
         public LowerCaseParameter build() {
             return new LowerCaseParameter(this);
-        }
-
-        @Override
-        public LowerCaseParameter.Factory setName(final String name) {
-            super.setName(name);
-            return this;
-        }
-
-        @Override
-        public LowerCaseParameter.Factory setSyntax(final String syntax) {
-            super.setSyntax(syntax);
-            return this;
-        }
-
-        @Override
-        public LowerCaseParameter.Factory setIndex(final int index) {
-            super.setIndex(index);
-            return this;
-        }
-
-        @Override
-        public LowerCaseParameter.Factory setDefaultValue(final String defaultValue) {
-            super.setDefaultValue(defaultValue);
-            return this;
         }
 
     }

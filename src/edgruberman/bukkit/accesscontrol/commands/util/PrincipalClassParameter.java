@@ -33,7 +33,7 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
 
 
 
-    public static class Factory extends LimitedParameter.Factory<PrincipalClassParameter, Class<? extends Principal>> {
+    public static class Factory extends LimitedParameter.Factory<PrincipalClassParameter, Class<? extends Principal>, PrincipalClassParameter.Factory> {
 
         public static PrincipalClassParameter.Factory create(final String name, final ConfigurationCourier courier) {
             return new PrincipalClassParameter.Factory(name, courier);
@@ -53,30 +53,6 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
         @Deprecated
         public PrincipalClassParameter.Factory setAcceptable(final Collection<String> acceptable) {
             throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public PrincipalClassParameter.Factory setName(final String name) {
-            super.setName(name);
-            return this;
-        }
-
-        @Override
-        public PrincipalClassParameter.Factory setSyntax(final String syntax) {
-            super.setSyntax(syntax);
-            return this;
-        }
-
-        @Override
-        public PrincipalClassParameter.Factory setIndex(final int index) {
-            super.setIndex(index);
-            return this;
-        }
-
-        @Override
-        public PrincipalClassParameter.Factory setDefaultValue(final Class<? extends Principal> defaultValue) {
-            super.setDefaultValue(defaultValue);
-            return this;
         }
 
     }
