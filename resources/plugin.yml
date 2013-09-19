@@ -5,6 +5,25 @@ author: EdGruberman (ed@rjump.com)
 website: http://github.com/EdGruberman/AccessControl
 main: edgruberman.bukkit.accesscontrol.Main
 commands:
+
+  # ---- permission commands ----
+  'accesscontrol:grant':
+    aliases: ['p+', grant]
+    description: Set direct permission entry as true
+    permission: accesscontrol.grant
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+  'accesscontrol:revoke':
+    aliases: ['p-', revoke]
+    description: Unset direct permission entry
+    permission: accesscontrol.revoke
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+  'accesscontrol:deny':
+    aliases: [deny]
+    description: Set direct permission entry as false
+    permission: accesscontrol.deny
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+
+  # ---- analysis commands ----
   'accesscontrol:check':
     aliases: ['p', check]
     description: Shows current value of permission for player
@@ -25,25 +44,13 @@ commands:
     description: Shows default value of permission for player
     permission: accesscontrol.default
     usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oplayer§3]'
-  'accesscontrol:deny':
-    aliases: [deny]
-    description: Set direct permission entry as false
-    permission: accesscontrol.deny
-    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
-  'accesscontrol:grant':
-    aliases: ['p+', grant]
-    description: Set direct permission entry as true
-    permission: accesscontrol.grant
-    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
-  'accesscontrol:revoke':
-    aliases: ['p-', revoke]
-    description: Remove direct permission entry
-    permission: accesscontrol.revoke
-    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+
+  # ---- general commands ----
   'accesscontrol:reload':
     description: Reload AccessControl plugin
     permission: accesscontrol.reload
     usage: '§f-> §7Usage: §b/<command>'
+
 permissions:
   accesscontrol.user:
     description: Can use basic features
