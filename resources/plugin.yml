@@ -6,7 +6,7 @@ website: http://github.com/EdGruberman/AccessControl
 main: edgruberman.bukkit.accesscontrol.Main
 commands:
   'accesscontrol:check':
-    aliases: [check]
+    aliases: ['p', check]
     description: Shows current value of permission for player
     permission: accesscontrol.check
     usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oplayer§3]'
@@ -31,12 +31,12 @@ commands:
     permission: accesscontrol.deny
     usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
   'accesscontrol:grant':
-    aliases: [grant]
+    aliases: ['p+', grant]
     description: Set direct permission entry as true
     permission: accesscontrol.grant
     usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
   'accesscontrol:revoke':
-    aliases: [revoke]
+    aliases: ['p-', revoke]
     description: Remove direct permission entry
     permission: accesscontrol.revoke
     usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
