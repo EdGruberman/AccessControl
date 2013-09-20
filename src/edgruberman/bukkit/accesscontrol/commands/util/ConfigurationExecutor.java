@@ -10,7 +10,7 @@ public abstract class ConfigurationExecutor extends Executor {
         this.courier = courier;
     }
 
-    protected <P extends Parameter<T>, T> Parameter.Factory<P, T, ?> setSyntax(final Parameter.Factory<P, T, ?> factory) {
+    protected void setSyntax(final Parameter.Factory<?, ?, ?> factory) {
         // concatenate values for limited
         if (factory instanceof LimitedParameter.Factory) {
             final LimitedParameter.Factory<?, ?, ?> limited = (LimitedParameter.Factory<?, ?, ?>) factory;
@@ -27,13 +27,12 @@ public abstract class ConfigurationExecutor extends Executor {
         final String key = ( factory.required ? "argument-syntax-required" : "argument-syntax-optional" );
         final String requirement = this.courier.format(key, factory.syntax);
         factory.setSyntax(requirement);
-
-        return factory;
     }
 
     @Override
     protected <P extends Parameter<T>, T> P addParameter(final Parameter.Factory<P, T, ?> factory) {
-        return super.addParameter(this.setSyntax(factory));
+        this.setSyntax(factory);
+        return super.addParameter(factory);
     }
 
     @Override

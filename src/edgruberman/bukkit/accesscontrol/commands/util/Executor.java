@@ -24,17 +24,26 @@ public abstract class Executor implements CommandExecutor {
         this.tokenizer.setQuoteChar('"');
     }
 
-    /** configures as required and sets begin to next available index */
+    /**
+     * configures as required and sets begin to next available index
+     * @return the resultant parameter
+     */
     protected <P extends Parameter<T>, T> P addRequired(final Parameter.Factory<P, T, ?> factory) {
         return this.addParameter(factory.setRequired(true));
     }
 
-    /** configures as not required and sets begin to next available index */
+    /**
+     * configures as not required and sets begin to next available index
+     * @return the resultant parameter
+     */
     protected <P extends Parameter<T>, T> P addOptional(final Parameter.Factory<P, T, ?> factory) {
         return this.addParameter(factory.setRequired(false));
     }
 
-    /** sets begin to next available index */
+    /**
+     * sets begin to next available index
+     * @return the resultant parameter
+     */
     protected <P extends Parameter<T>, T> P addParameter(final Parameter.Factory<P, T, ?> factory) {
         final int next = ( !this.parameters.isEmpty() ? this.parameters.get(this.parameters.size() - 1).getEnd() : 0 );
         final P result = factory.setBegin(next).build();
@@ -44,8 +53,8 @@ public abstract class Executor implements CommandExecutor {
 
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
-        final List<String> transformed = this.transform(args);
-        final ExecutionRequest request = new ExecutionRequest(sender, command, label, transformed);
+        final List<String> tokenized = this.tokenize(args);
+        final ExecutionRequest request = new ExecutionRequest(sender, command, label, tokenized);
 
         try {
             return this.execute(request);
@@ -55,7 +64,7 @@ public abstract class Executor implements CommandExecutor {
         }
     }
 
-    protected List<String> transform(final String... args) {
+    protected List<String> tokenize(final String... args) {
         this.tokenizer.reset(JoinList.join(Arrays.asList(args)));
         return Arrays.asList(this.tokenizer.getTokenArray());
     }
