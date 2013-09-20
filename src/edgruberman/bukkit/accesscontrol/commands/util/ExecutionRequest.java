@@ -1,17 +1,20 @@
 package edgruberman.bukkit.accesscontrol.commands.util;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
-public class ExecutionRequest {
+public final class ExecutionRequest {
 
     private final CommandSender sender;
     private final Command command;
     private final String label;
     private final List<String> arguments;
+    private final Map<Parameter<?>, Object> parsed = new HashMap<Parameter<?>, Object>();
 
     ExecutionRequest(final CommandSender sender, final Command command, final String label, final List<String> arguments) {
         this.sender = sender;
@@ -36,7 +39,7 @@ public class ExecutionRequest {
         return Collections.unmodifiableList(this.arguments);
     }
 
-    /** @return empty if no arguments were not supplied */
+    /** @return empty if no arguments were supplied */
     public List<String> getArguments(final Parameter<?> parameter) {
         final int begin = parameter.getBegin();
         if (begin >= this.arguments.size()) return Collections.emptyList();
@@ -52,9 +55,18 @@ public class ExecutionRequest {
 
     /** @throws ArgumentContingency when the value can not be parsed */
     public <T> T parse(final Parameter<T> parameter) throws ArgumentContingency {
+        if (this.parsed.containsKey(parameter)) {
+            @SuppressWarnings("unchecked")
+            final T cached = (T) this.parsed.get(parameter);
+            return cached;
+        }
+
         if (parameter.required && !this.isExplicit(parameter)) throw new MissingArgumentContingency(this, parameter);
-        final T result = parameter.parse(this);
-        return ( result != null ? result : parameter.getDefaultValue() );
+        T result = parameter.parse(this);
+        if (result == null) result = parameter.getDefaultValue();
+
+        this.parsed.put(parameter, result);
+        return result;
     }
 
     /** @return true when at least one argument was supplied for parameter */
