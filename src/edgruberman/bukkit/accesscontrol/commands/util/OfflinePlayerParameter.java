@@ -14,8 +14,8 @@ public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
     }
 
     @Override
-    public OfflinePlayer parseParameter(final ExecutionRequest request) throws ArgumentContingency {
-        String argument = request.getArgument(this.index);
+    public OfflinePlayer parse(final ExecutionRequest request) throws ArgumentContingency {
+        String argument = request.getArgument(this.begin);
 
         if (argument == null) {
             if (!(request.getSender() instanceof Player)) throw new MissingArgumentContingency(request, this);

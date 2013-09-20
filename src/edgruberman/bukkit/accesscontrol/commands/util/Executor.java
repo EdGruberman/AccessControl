@@ -24,19 +24,20 @@ public abstract class Executor implements CommandExecutor {
         this.tokenizer.setQuoteChar('"');
     }
 
-    /** configures as required and sets index to last */
+    /** configures as required and sets begin to next available index */
     protected <P extends Parameter<T>, T> P addRequired(final Parameter.Factory<P, T, ?> factory) {
         return this.addParameter(factory.setRequired(true));
     }
 
-    /** configures as not required and sets index to last */
+    /** configures as not required and sets begin to next available index */
     protected <P extends Parameter<T>, T> P addOptional(final Parameter.Factory<P, T, ?> factory) {
         return this.addParameter(factory.setRequired(false));
     }
 
-    /** sets index to last */
+    /** sets begin to next available index */
     protected <P extends Parameter<T>, T> P addParameter(final Parameter.Factory<P, T, ?> factory) {
-        final P result = factory.setIndex(this.parameters.size()).build();
+        final int next = ( !this.parameters.isEmpty() ? this.parameters.get(this.parameters.size() - 1).getEnd() : 0 );
+        final P result = factory.setBegin(next).build();
         this.parameters.add(result);
         return result;
     }
@@ -44,10 +45,10 @@ public abstract class Executor implements CommandExecutor {
     @Override
     public boolean onCommand(final CommandSender sender, final Command command, final String label, final String[] args) {
         final List<String> transformed = this.transform(args);
-        final ExecutionRequest arguments = new ExecutionRequest(sender, command, label, transformed, this.parameters);
+        final ExecutionRequest request = new ExecutionRequest(sender, command, label, transformed);
 
         try {
-            return this.execute(arguments);
+            return this.execute(request);
 
         } catch (final CancellationContingency e) {
             throw new IllegalStateException(e);

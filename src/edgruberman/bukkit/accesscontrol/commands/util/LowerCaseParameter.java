@@ -12,8 +12,8 @@ public class LowerCaseParameter extends Parameter<String> {
     }
 
     @Override
-    public String parseParameter(final ExecutionRequest request) throws ArgumentContingency {
-        final String argument = request.getArgument(this.index);
+    public String parse(final ExecutionRequest request) throws ArgumentContingency {
+        final String argument = request.getArgument(this.begin);
         if (argument == null) return argument;
         return argument.toLowerCase(this.locale);
     }

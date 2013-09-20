@@ -7,8 +7,8 @@ public class StringParameter extends Parameter<String> {
     }
 
     @Override
-    public String parseParameter(final ExecutionRequest request) throws ArgumentContingency {
-        return request.getArgument(this.index);
+    public String parse(final ExecutionRequest request) throws ArgumentContingency {
+        return request.getArgument(this.begin);
     }
 
 

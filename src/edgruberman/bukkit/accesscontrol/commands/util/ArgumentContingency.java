@@ -1,5 +1,7 @@
 package edgruberman.bukkit.accesscontrol.commands.util;
 
+import java.util.List;
+
 /** contains information on a value that could not be parsed for a Parameter */
 public class ArgumentContingency extends CancellationContingency {
 
@@ -31,8 +33,8 @@ public class ArgumentContingency extends CancellationContingency {
         return this.parameter;
     }
 
-    public String getArgument() {
-        return this.request.getArgument(this.parameter);
+    public List<String> getArguments() {
+        return this.request.getArguments(this.parameter);
     }
 
 }

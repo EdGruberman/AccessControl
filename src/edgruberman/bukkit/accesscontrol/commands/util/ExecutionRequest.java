@@ -12,14 +12,12 @@ public class ExecutionRequest {
     private final Command command;
     private final String label;
     private final List<String> arguments;
-    private final List<Parameter<?>> parameters;
 
-    ExecutionRequest(final CommandSender sender, final Command command, final String label, final List<String> arguments, final List<Parameter<?>> parameters) {
+    ExecutionRequest(final CommandSender sender, final Command command, final String label, final List<String> arguments) {
         this.sender = sender;
         this.command = command;
         this.label = label;
         this.arguments = arguments;
-        this.parameters = parameters;
     }
 
     public CommandSender getSender() {
@@ -38,9 +36,12 @@ public class ExecutionRequest {
         return Collections.unmodifiableList(this.arguments);
     }
 
-    /** @return null if argument at index was not supplied */
-    public String getArgument(final Parameter<?> parameter) {
-        return this.getArgument(parameter.getIndex());
+    /** @return empty if no arguments were not supplied */
+    public List<String> getArguments(final Parameter<?> parameter) {
+        final int begin = parameter.getBegin();
+        if (begin >= this.arguments.size()) return Collections.emptyList();
+        final int end = Math.min(parameter.getEnd(), this.arguments.size());
+        return this.arguments.subList(begin, end);
     }
 
     /** @return null if argument at index was not supplied */
@@ -49,19 +50,16 @@ public class ExecutionRequest {
         return this.arguments.get(index);
     }
 
+    /** @throws ArgumentContingency when the value can not be parsed */
     public <T> T parse(final Parameter<T> parameter) throws ArgumentContingency {
-        @SuppressWarnings("unchecked")
-        final T result = (T) this.parse(parameter.getIndex());
-        return result;
+        if (parameter.required && !this.isExplicit(parameter)) throw new MissingArgumentContingency(this, parameter);
+        final T result = parameter.parse(this);
+        return ( result != null ? result : parameter.getDefaultValue() );
     }
 
-    public Object parse(final int index) throws ArgumentContingency {
-        return this.parameters.get(index).parse(this);
-    }
-
-    /** @return true when argument was supplied for parameter */
+    /** @return true when at least one argument was supplied for parameter */
     public boolean isExplicit(final Parameter<?> parameter) {
-        return parameter.getIndex() < this.arguments.size();
+        return parameter.getBegin() < this.arguments.size();
     }
 
 }

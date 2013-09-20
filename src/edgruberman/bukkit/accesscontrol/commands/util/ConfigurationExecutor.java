@@ -54,7 +54,7 @@ public abstract class ConfigurationExecutor extends Executor {
                     , new Object[] {
                             u.getParameter().getName()
                             , u.getParameter().getSyntax()
-                            , u.getRequest().getArgument(u.getParameter().getIndex())
+                            , JoinList.join(u.getRequest().getArguments(u.getParameter()))
                     });
             return false;
         }
