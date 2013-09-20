@@ -45,13 +45,13 @@ public class OnlinePlayerParameter extends Parameter<Player> {
         }
 
         @Override
-        public OnlinePlayerParameter build() {
-            return new OnlinePlayerParameter(this);
+        public OnlinePlayerParameter.Factory cast() {
+            return this;
         }
 
         @Override
-        public OnlinePlayerParameter.Factory cast() {
-            return this;
+        public OnlinePlayerParameter build() {
+            return new OnlinePlayerParameter(this);
         }
 
     }

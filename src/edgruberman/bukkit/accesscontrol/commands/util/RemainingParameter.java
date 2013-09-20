@@ -26,13 +26,13 @@ public class RemainingParameter extends Parameter<List<String>> {
         }
 
         @Override
-        public RemainingParameter build() {
-            return new RemainingParameter(this);
+        public RemainingParameter.Factory cast() {
+            return this;
         }
 
         @Override
-        public RemainingParameter.Factory cast() {
-            return this;
+        public RemainingParameter build() {
+            return new RemainingParameter(this);
         }
 
     }

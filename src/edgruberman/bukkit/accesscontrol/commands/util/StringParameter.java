@@ -22,13 +22,13 @@ public class StringParameter extends Parameter<String> {
         }
 
         @Override
-        public StringParameter build() {
-            return new StringParameter(this);
+        public StringParameter.Factory cast() {
+            return this;
         }
 
         @Override
-        public StringParameter.Factory cast() {
-            return this;
+        public StringParameter build() {
+            return new StringParameter(this);
         }
 
     }

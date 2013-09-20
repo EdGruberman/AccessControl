@@ -89,9 +89,9 @@ public abstract class Parameter<T> {
             return this.cast();
         }
 
-        public abstract P build();
-
         public abstract F cast();
+
+        public abstract P build();
 
     }
 

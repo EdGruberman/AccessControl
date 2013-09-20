@@ -43,13 +43,13 @@ public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
         }
 
         @Override
-        public OfflinePlayerParameter build() {
-            return new OfflinePlayerParameter(this);
+        public OfflinePlayerParameter.Factory cast() {
+            return this;
         }
 
         @Override
-        public OfflinePlayerParameter.Factory cast() {
-            return this;
+        public OfflinePlayerParameter build() {
+            return new OfflinePlayerParameter(this);
         }
 
     }

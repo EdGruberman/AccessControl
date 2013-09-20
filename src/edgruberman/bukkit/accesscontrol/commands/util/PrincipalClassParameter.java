@@ -48,11 +48,6 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
             return result;
         }
 
-        @Override
-        public PrincipalClassParameter build() {
-            return new PrincipalClassParameter(this);
-        }
-
         /** @deprecated unsupported; always set to {@link PrincipalClassParameter#ACCEPTABLE ACCEPTABLE.keySet()} */
         @Override
         @Deprecated
@@ -63,6 +58,11 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
         @Override
         public PrincipalClassParameter.Factory cast() {
             return this;
+        }
+
+        @Override
+        public PrincipalClassParameter build() {
+            return new PrincipalClassParameter(this);
         }
 
     }

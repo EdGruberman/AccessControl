@@ -30,13 +30,13 @@ public class IntegerParameter extends Parameter<Integer> {
         }
 
         @Override
-        public IntegerParameter build() {
-            return new IntegerParameter(this);
+        public IntegerParameter.Factory cast() {
+            return this;
         }
 
         @Override
-        public IntegerParameter.Factory cast() {
-            return this;
+        public IntegerParameter build() {
+            return new IntegerParameter(this);
         }
 
     }

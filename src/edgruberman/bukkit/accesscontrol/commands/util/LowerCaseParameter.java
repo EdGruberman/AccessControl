@@ -36,13 +36,13 @@ public class LowerCaseParameter extends Parameter<String> {
         }
 
         @Override
-        public LowerCaseParameter build() {
-            return new LowerCaseParameter(this);
+        public LowerCaseParameter.Factory cast() {
+            return this;
         }
 
         @Override
-        public LowerCaseParameter.Factory cast() {
-            return this;
+        public LowerCaseParameter build() {
+            return new LowerCaseParameter(this);
         }
 
     }
