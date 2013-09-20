@@ -18,6 +18,8 @@ public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
         String argument = request.getArgument(this.index);
 
         if (argument == null) {
+            if (this.defaultValue != null) return null;
+
             if (!(request.getSender() instanceof Player)) throw new MissingArgumentContingency(request, this);
             argument = request.getSender().getName();
         }

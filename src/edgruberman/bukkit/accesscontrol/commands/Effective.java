@@ -60,7 +60,7 @@ public class Effective extends ConfigurationExecutor {
 
         final Message.Paginator paginator = new Message.Paginator(response, request.getSender());
         final int count = paginator.count();
-        final int index = Math.min(Math.max(0, page - 1), count - 1); // between 1 and max pages
+        final int index = Math.min(Math.max(0, page - 1), count - 1); // between 0 and count - 1
         for (final Message message : paginator.page(index)) this.courier.submit(RecipientList.Sender.create(request.getSender()), message);
         this.courier.send(request.getSender(), "effective-summary", index + 1, count);
 

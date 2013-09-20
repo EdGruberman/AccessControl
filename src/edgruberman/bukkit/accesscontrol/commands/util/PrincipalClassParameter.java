@@ -43,9 +43,11 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
     public static class Factory extends LimitedParameter.Factory<PrincipalClassParameter, Class<? extends Principal>, PrincipalClassParameter.Factory> {
 
         public static PrincipalClassParameter.Factory create(final String name) {
-            final PrincipalClassParameter.Factory result = new PrincipalClassParameter.Factory().setName(name);
-            result.acceptable = PrincipalClassParameter.ACCEPTABLE.keySet();
-            return result;
+            return new PrincipalClassParameter.Factory().setName(name);
+        }
+
+        public Factory() {
+            this.acceptable = PrincipalClassParameter.ACCEPTABLE.keySet();
         }
 
         /** @deprecated unsupported; always set to {@link PrincipalClassParameter#ACCEPTABLE ACCEPTABLE.keySet()} */

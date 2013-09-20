@@ -54,7 +54,7 @@ public abstract class PermissionExecutor extends ConfigurationExecutor {
 
         // group, must exist
         Principal result = null;
-        if (type == null || type.equals(Group.class)) {
+        if (!request.isExplicit(this.type) || type.equals(Group.class)) {
             result = this.authority.getGroup(name);
             if (result == null && type != null) throw new UnknownArgumentContingency(request, this.name);
         }

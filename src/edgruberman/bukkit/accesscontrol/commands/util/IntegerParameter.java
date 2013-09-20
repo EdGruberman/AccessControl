@@ -9,7 +9,7 @@ public class IntegerParameter extends Parameter<Integer> {
     @Override
     public Integer parse(final ExecutionRequest request) throws ArgumentContingency {
         final String argument = request.getArgument(this.index);
-        if (argument == null) return this.defaultValue;
+        if (argument == null) return null;
 
         try {
             return Integer.parseInt(argument);
