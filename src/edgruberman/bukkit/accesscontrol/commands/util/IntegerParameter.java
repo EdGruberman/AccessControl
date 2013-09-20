@@ -1,7 +1,5 @@
 package edgruberman.bukkit.accesscontrol.commands.util;
 
-import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
-
 public class IntegerParameter extends Parameter<Integer> {
 
     public IntegerParameter(final IntegerParameter.Factory factory) {
@@ -9,7 +7,7 @@ public class IntegerParameter extends Parameter<Integer> {
     }
 
     @Override
-    public Integer parse(final ExecutionRequest request) throws ArgumentParseException {
+    public Integer parseParameter(final ExecutionRequest request) throws ArgumentContingency {
         final String argument = request.getArgument(this.index);
         if (argument == null) return this.defaultValue;
 
@@ -17,7 +15,7 @@ public class IntegerParameter extends Parameter<Integer> {
             return Integer.parseInt(argument);
 
         } catch (final NumberFormatException e) {
-            throw new ArgumentUnknownException(request, this);
+            throw new UnknownArgumentContingency(request, this);
         }
     }
 
@@ -27,17 +25,18 @@ public class IntegerParameter extends Parameter<Integer> {
 
     public static class Factory extends Parameter.Factory<IntegerParameter, Integer, IntegerParameter.Factory> {
 
-        public static IntegerParameter.Factory create(final String name, final ConfigurationCourier courier) {
-            return new IntegerParameter.Factory(name, courier);
-        }
-
-        public Factory(final String name, final ConfigurationCourier courier) {
-            super(name, courier);
+        public static IntegerParameter.Factory create(final String name) {
+            return new IntegerParameter.Factory().setName(name);
         }
 
         @Override
         public IntegerParameter build() {
             return new IntegerParameter(this);
+        }
+
+        @Override
+        public IntegerParameter.Factory cast() {
+            return this;
         }
 
     }

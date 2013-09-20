@@ -9,43 +9,35 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-import edgruberman.bukkit.accesscontrol.commands.util.ConditionalParameter.OptionalParameter;
-import edgruberman.bukkit.accesscontrol.commands.util.ConditionalParameter.RequiredParameter;
-import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
-import edgruberman.bukkit.accesscontrol.messaging.RecipientList;
-
 /**
  * parses arguments according to a {@link StrTokenizer} definition
  * and defined parameters
  */
 public abstract class Executor implements CommandExecutor {
 
-    protected ConfigurationCourier courier;
     protected final StrTokenizer tokenizer = new StrTokenizer();
     protected final List<Parameter<?>> parameters = new ArrayList<Parameter<?>>();
 
     /** configures tokenizer to delimit by spaces using double quotes as the quote character */
-    protected Executor(final ConfigurationCourier courier) {
-        this.courier = courier;
+    protected Executor() {
         this.tokenizer.setDelimiterChar(' ');
         this.tokenizer.setQuoteChar('"');
     }
 
+    /** configures as required and sets index to last */
     protected <P extends Parameter<T>, T> P addRequired(final Parameter.Factory<P, T, ?> factory) {
-        factory.setSyntax(this.courier.format("argument-required", factory.syntax));
-        factory.setIndex(this.parameters.size());
-
-        final P result = factory.build();
-        this.parameters.add(new RequiredParameter<T>(factory, result, this.courier));
-        return result;
+        return this.addParameter(factory.setRequired(true));
     }
 
+    /** configures as not required and sets index to last */
     protected <P extends Parameter<T>, T> P addOptional(final Parameter.Factory<P, T, ?> factory) {
-        factory.setSyntax(this.courier.format("argument-optional", factory.syntax));
-        factory.setIndex(this.parameters.size());
+        return this.addParameter(factory.setRequired(false));
+    }
 
-        final P result = factory.build();
-        this.parameters.add(new OptionalParameter<T>(factory, result, this.courier));
+    /** sets index to last */
+    protected <P extends Parameter<T>, T> P addParameter(final Parameter.Factory<P, T, ?> factory) {
+        final P result = factory.setIndex(this.parameters.size()).build();
+        this.parameters.add(result);
         return result;
     }
 
@@ -57,9 +49,8 @@ public abstract class Executor implements CommandExecutor {
         try {
             return this.execute(arguments);
 
-        } catch (final ArgumentParseException e) {
-            e.submit(this.courier, RecipientList.Sender.create(sender));
-            return false;
+        } catch (final CancellationContingency e) {
+            throw new IllegalStateException(e);
         }
     }
 
@@ -69,9 +60,9 @@ public abstract class Executor implements CommandExecutor {
     }
 
     /**
-     * @return true if command completed successfully
-     * @throws ArgumentParseException when an argument can not be parsed
+     * @return true if command processing completed successfully
+     * @throws CancellationContingency when the execution is stopped due to a requirement not being met
      */
-    protected abstract boolean execute(final ExecutionRequest request) throws ArgumentParseException;
+    protected abstract boolean execute(final ExecutionRequest request) throws CancellationContingency;
 
 }

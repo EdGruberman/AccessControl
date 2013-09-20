@@ -11,17 +11,17 @@ commands:
     aliases: ['p+', grant]
     description: Set direct permission entry as true
     permission: accesscontrol.grant
-    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§bgroup§3|§buser§3] [§ocontext§3]'
   'accesscontrol:revoke':
     aliases: ['p-', revoke]
     description: Unset direct permission entry
     permission: accesscontrol.revoke
-    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§bgroup§3|§buser§3] [§ocontext§3]'
   'accesscontrol:deny':
     aliases: [deny]
     description: Set direct permission entry as false
     permission: accesscontrol.deny
-    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§bgroup§3|§buser§3] [§ocontext§3]'
 
   # ---- analysis commands ----
   'accesscontrol:check':
@@ -38,7 +38,7 @@ commands:
     aliases: [trace]
     description: Configured assignments of permission for principal
     permission: accesscontrol.trace
-    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§otype§3] [§ocontext§3]'
+    usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oname§3] [§bgroup§3|§buser§3] [§ocontext§3]'
   'accesscontrol:default':
     aliases: [default]
     description: Shows default value of permission for player

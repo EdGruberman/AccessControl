@@ -1,6 +1,7 @@
 package edgruberman.bukkit.accesscontrol.commands.util;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
@@ -9,23 +10,29 @@ import java.util.TreeMap;
 import edgruberman.bukkit.accesscontrol.Group;
 import edgruberman.bukkit.accesscontrol.Principal;
 import edgruberman.bukkit.accesscontrol.User;
-import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 
 public class PrincipalClassParameter extends LimitedParameter<Class<? extends Principal>> {
 
-    public static final Map<String, Class<? extends Principal>> ACCEPTABLE = new TreeMap<String, Class<? extends Principal>>(PrincipalClassParameter.CASE_INSENSITIVE_ORDER);
+    public static final Map<String, Class<? extends Principal>> ACCEPTABLE;
 
     static {
-        PrincipalClassParameter.ACCEPTABLE.put(User.class.getSimpleName().toLowerCase(Locale.ENGLISH), User.class);
-        PrincipalClassParameter.ACCEPTABLE.put(Group.class.getSimpleName().toLowerCase(Locale.ENGLISH), Group.class);
+        final Comparator<String> insensitive = new CaseInsensitiveComparator();
+        final Map<String, Class<? extends Principal>> result = new TreeMap<String, Class<? extends Principal>>(insensitive);
+
+        result.put(User.class.getSimpleName().toLowerCase(Locale.ENGLISH), User.class);
+        result.put(Group.class.getSimpleName().toLowerCase(Locale.ENGLISH), Group.class);
+
+        ACCEPTABLE = Collections.unmodifiableMap(result);
     }
+
+
 
     public PrincipalClassParameter(final PrincipalClassParameter.Factory factory) {
         super(factory);
     }
 
     @Override
-    public Class<? extends Principal> doParse(final ExecutionRequest request) throws ArgumentParseException {
+    public Class<? extends Principal> parseLimited(final ExecutionRequest request) throws ArgumentContingency {
         return PrincipalClassParameter.ACCEPTABLE.get(request.getArgument(this.index));
     }
 
@@ -35,12 +42,10 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
 
     public static class Factory extends LimitedParameter.Factory<PrincipalClassParameter, Class<? extends Principal>, PrincipalClassParameter.Factory> {
 
-        public static PrincipalClassParameter.Factory create(final String name, final ConfigurationCourier courier) {
-            return new PrincipalClassParameter.Factory(name, courier);
-        }
-
-        public Factory(final String name, final ConfigurationCourier courier) {
-            super(name, courier, PrincipalClassParameter.ACCEPTABLE.keySet());
+        public static PrincipalClassParameter.Factory create(final String name) {
+            final PrincipalClassParameter.Factory result = new PrincipalClassParameter.Factory().setName(name);
+            result.acceptable = PrincipalClassParameter.ACCEPTABLE.keySet();
+            return result;
         }
 
         @Override
@@ -55,12 +60,16 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
             throw new UnsupportedOperationException();
         }
 
+        @Override
+        public PrincipalClassParameter.Factory cast() {
+            return this;
+        }
+
     }
 
 
 
 
-    private  static final Comparator<String> CASE_INSENSITIVE_ORDER = new CaseInsensitiveComparator();
 
     /** null friendly implementation modified from {@link String#CASE_INSENSITIVE_ORDER} */
     private static class CaseInsensitiveComparator implements Comparator<String> {

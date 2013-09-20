@@ -35,7 +35,7 @@ public class Trace extends PermissionExecutor {
 
     // usage: /<command> permission [name] [type] [context]
     @Override
-    public boolean execute(final ExecutionRequest request, final String permission, final Principal principal, final ExecutionContext context) {
+    public boolean executePermission(final ExecutionRequest request, final String permission, final Principal principal, final ExecutionContext context) {
         // context
         final List<String> description = new JoinList<String>();
         for (final Registration registration : this.registrations) description.addAll(context.describe(registration.getImplementation()));

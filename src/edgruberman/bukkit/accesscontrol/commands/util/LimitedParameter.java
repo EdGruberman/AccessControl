@@ -2,8 +2,6 @@ package edgruberman.bukkit.accesscontrol.commands.util;
 
 import java.util.Collection;
 
-import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
-
 public abstract class LimitedParameter<T> extends Parameter<T> {
 
     public final Collection<String> acceptable;
@@ -14,13 +12,13 @@ public abstract class LimitedParameter<T> extends Parameter<T> {
     }
 
     @Override
-    public T parse(final ExecutionRequest request) throws ArgumentParseException {
+    public T parseParameter(final ExecutionRequest request) throws ArgumentContingency {
         final String value = request.getArgument(this.index);
-        if (value != null && !this.acceptable.contains(value)) throw new ArgumentUnknownException(request, this);
-        return this.doParse(request);
+        if (value != null && !this.acceptable.contains(value)) throw new UnknownArgumentContingency(request, this);
+        return this.parseLimited(request);
     }
 
-    protected abstract T doParse(final ExecutionRequest request) throws ArgumentParseException;
+    protected abstract T parseLimited(final ExecutionRequest request) throws ArgumentContingency;
 
 
 
@@ -30,16 +28,9 @@ public abstract class LimitedParameter<T> extends Parameter<T> {
 
         protected Collection<String> acceptable;
 
-        protected Factory(final String name, final ConfigurationCourier courier, final Collection<String> acceptable) {
-            super(name);
-            this.syntax = JoinList.join(acceptable, courier.getBase(), "argument-limited-");
-            this.acceptable = acceptable;
-        }
-
-        @SuppressWarnings("unchecked")
         public F setAcceptable(final Collection<String> acceptable) {
             this.acceptable = acceptable;
-            return (F) this;
+            return this.cast();
         }
 
     }

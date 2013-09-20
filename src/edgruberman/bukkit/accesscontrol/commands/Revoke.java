@@ -23,7 +23,7 @@ public class Revoke extends PermissionExecutor {
 
     // usage: /<command> permission [name] [type] [context]
     @Override
-    public boolean execute(final ExecutionRequest request, final String permission, final Principal principal, final ExecutionContext context) {
+    public boolean executePermission(final ExecutionRequest request, final String permission, final Principal principal, final ExecutionContext context) {
         final Descriptor existing = principal.getPermissions(context.registration().getImplementation());
 
         if (existing == null) {

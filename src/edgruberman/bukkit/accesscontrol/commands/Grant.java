@@ -23,7 +23,7 @@ public class Grant extends PermissionExecutor {
 
     // usage: /<command> permission [name] [type] [context]
     @Override
-    public boolean execute(final ExecutionRequest request, final String permission, final Principal principal, final ExecutionContext context) {
+    public boolean executePermission(final ExecutionRequest request, final String permission, final Principal principal, final ExecutionContext context) {
         Descriptor descriptor = principal.getPermissions(context.registration().getImplementation());
         final boolean existing = (descriptor != null);
         if (!existing) descriptor = context.registration().getFactory().create();

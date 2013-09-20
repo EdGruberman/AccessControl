@@ -4,8 +4,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 
-import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
-
 public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
 
     private final Server server;
@@ -16,11 +14,11 @@ public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
     }
 
     @Override
-    public OfflinePlayer parse(final ExecutionRequest request) throws ArgumentParseException {
+    public OfflinePlayer parseParameter(final ExecutionRequest request) throws ArgumentContingency {
         String argument = request.getArgument(this.index);
 
         if (argument == null) {
-            if (!(request.getSender() instanceof Player)) throw new ArgumentMissingException(request, this);
+            if (!(request.getSender() instanceof Player)) throw new MissingArgumentContingency(request, this);
             argument = request.getSender().getName();
         }
 
@@ -33,26 +31,25 @@ public class OfflinePlayerParameter extends Parameter<OfflinePlayer> {
 
     public static class Factory extends Parameter.Factory<OfflinePlayerParameter, OfflinePlayer, OfflinePlayerParameter.Factory> {
 
-        public static OfflinePlayerParameter.Factory create(final String name, final ConfigurationCourier courier, final Server server) {
-            final OfflinePlayerParameter.Factory result = new OfflinePlayerParameter.Factory(name, courier);
-            result.setServer(server);
-            return result;
+        public static OfflinePlayerParameter.Factory create(final String name, final Server server) {
+            return new OfflinePlayerParameter.Factory().setName(name).setServer(server);
         }
 
         private Server server;
 
-        public Factory(final String name, final ConfigurationCourier courier) {
-            super(name, courier);
-        }
-
         public OfflinePlayerParameter.Factory setServer(final Server server) {
             this.server = server;
-            return this;
+            return this.cast();
         }
 
         @Override
         public OfflinePlayerParameter build() {
             return new OfflinePlayerParameter(this);
+        }
+
+        @Override
+        public OfflinePlayerParameter.Factory cast() {
+            return this;
         }
 
     }

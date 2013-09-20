@@ -17,7 +17,7 @@ import edgruberman.bukkit.accesscontrol.commands.util.ExecutionContext.ArgumentE
 import edgruberman.bukkit.accesscontrol.commands.util.ExecutionContext.PlayerExecutionContext;
 import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 
-public abstract class PermissionExecutor extends Executor {
+public abstract class PermissionExecutor extends ConfigurationExecutor {
 
     protected final Authority authority;
     protected final List<Registration> registrations;
@@ -31,24 +31,24 @@ public abstract class PermissionExecutor extends Executor {
         this.authority = authority;
         this.registrations = registrations;
 
-        this.permission = this.addRequired(LowerCaseParameter.Factory.create("permission", courier));
-        this.name = this.addOptional(OfflinePlayerParameter.Factory.create("name", courier, server));
-        this.type = this.addOptional(PrincipalClassParameter.Factory.create("type", courier));
-        this.context = this.addOptional(RemainingParameter.Factory.create("context", courier));
+        this.permission = this.addRequired(LowerCaseParameter.Factory.create("permission"));
+        this.name = this.addOptional(OfflinePlayerParameter.Factory.create("name", server));
+        this.type = this.addOptional(PrincipalClassParameter.Factory.create("type"));
+        this.context = this.addOptional(RemainingParameter.Factory.create("context"));
     }
 
     // usage: /<command> permission [name] [type] [context]
     @Override
-    protected boolean execute(final ExecutionRequest request) throws ArgumentParseException {
+    protected boolean executeImplementation(final ExecutionRequest request) throws CancellationContingency {
         final String permission = request.parse(this.permission);
         final Principal principal = this.parsePrincipal(request);
         final ExecutionContext context = this.parseContext(request, principal);
-        return this.execute(request, permission, principal, context);
+        return this.executePermission(request, permission, principal, context);
     }
 
-    public abstract boolean execute(ExecutionRequest request, String permission, Principal principal, ExecutionContext context) throws ArgumentParseException;
+    public abstract boolean executePermission(ExecutionRequest request, String permission, Principal principal, ExecutionContext context) throws CancellationContingency;
 
-    protected Principal parsePrincipal(final ExecutionRequest request) throws ArgumentParseException {
+    protected Principal parsePrincipal(final ExecutionRequest request) throws ArgumentContingency {
         final String name = request.parse(this.name).getName().toLowerCase(Locale.ENGLISH);
         final Class<? extends Principal> type = request.parse(this.type);
 
@@ -56,7 +56,7 @@ public abstract class PermissionExecutor extends Executor {
         Principal result = null;
         if (type == null || type.equals(Group.class)) {
             result = this.authority.getGroup(name);
-            if (result == null && type != null) throw new ArgumentUnknownException(request, this.name);
+            if (result == null && type != null) throw new UnknownArgumentContingency(request, this.name);
         }
 
         // otherwise, assume user
@@ -65,7 +65,7 @@ public abstract class PermissionExecutor extends Executor {
         return result;
     }
 
-    protected ExecutionContext parseContext(final ExecutionRequest request, final Principal principal) throws ArgumentParseException {
+    protected ExecutionContext parseContext(final ExecutionRequest request, final Principal principal) throws ArgumentContingency {
         final List<String> contextArgs = request.parse(this.context);
 
         // use player context when no explicit descriptor references provided, principal is a user, and player is online
@@ -76,7 +76,7 @@ public abstract class PermissionExecutor extends Executor {
                 result = new PlayerExecutionContext(target.getPlayer(), this.registrations);
 
                 // cancel when unable to identify primary registration based on no arguments
-                if (result.registration() == null) throw new ArgumentMissingException(request, this.context);
+                if (result.registration() == null) throw new MissingArgumentContingency(request, this.context);
             }
         }
 
@@ -85,7 +85,7 @@ public abstract class PermissionExecutor extends Executor {
             final CommandContext cc = new CommandContext(this.registrations, contextArgs);
 
             // cancel when unable to identify any descriptors (none supplied, or no registered descriptors match)
-            if (cc.size() < 1) throw new ArgumentMissingException(request, this.context);
+            if (cc.size() < 1) throw new MissingArgumentContingency(request, this.context);
 
             result = new ArgumentExecutionContext(cc, this.registrations);
         }

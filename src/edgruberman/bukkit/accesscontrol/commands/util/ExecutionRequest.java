@@ -38,20 +38,30 @@ public class ExecutionRequest {
         return Collections.unmodifiableList(this.arguments);
     }
 
-    /** @return null if argument at index does not exist */
+    /** @return null if argument at index was not supplied */
+    public String getArgument(final Parameter<?> parameter) {
+        return this.getArgument(parameter.getIndex());
+    }
+
+    /** @return null if argument at index was not supplied */
     public String getArgument(final int index) {
         if (index < 0 || index >= this.arguments.size()) return null;
         return this.arguments.get(index);
     }
 
-    public <T> T parse(final Parameter<T> parameter) throws ArgumentParseException {
+    public <T> T parse(final Parameter<T> parameter) throws ArgumentContingency {
         @SuppressWarnings("unchecked")
         final T result = (T) this.parse(parameter.getIndex());
         return result;
     }
 
-    public Object parse(final int index) throws ArgumentParseException {
+    public Object parse(final int index) throws ArgumentContingency {
         return this.parameters.get(index).parse(this);
+    }
+
+    /** @return true when argument was supplied for parameter */
+    public boolean isExplicit(final Parameter<?> parameter) {
+        return parameter.getIndex() < this.arguments.size();
     }
 
 }

@@ -9,9 +9,9 @@ import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 
-import edgruberman.bukkit.accesscontrol.commands.util.ArgumentParseException;
+import edgruberman.bukkit.accesscontrol.commands.util.CancellationContingency;
+import edgruberman.bukkit.accesscontrol.commands.util.ConfigurationExecutor;
 import edgruberman.bukkit.accesscontrol.commands.util.ExecutionRequest;
-import edgruberman.bukkit.accesscontrol.commands.util.Executor;
 import edgruberman.bukkit.accesscontrol.commands.util.IntegerParameter;
 import edgruberman.bukkit.accesscontrol.commands.util.LowerCaseParameter;
 import edgruberman.bukkit.accesscontrol.commands.util.OnlinePlayerParameter;
@@ -19,7 +19,7 @@ import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 import edgruberman.bukkit.accesscontrol.messaging.Message;
 import edgruberman.bukkit.accesscontrol.messaging.RecipientList;
 
-public class Effective extends Executor {
+public class Effective extends ConfigurationExecutor {
 
     private final Server server;
     private final IntegerParameter page;
@@ -30,14 +30,14 @@ public class Effective extends Executor {
         super(courier);
         this.server = server;
 
-        this.page = this.addOptional(IntegerParameter.Factory.create("page", courier).setDefaultValue(1));
-        this.player = this.addOptional(OnlinePlayerParameter.Factory.create("player", courier, server));
-        this.match = this.addOptional(LowerCaseParameter.Factory.create("match", courier));
+        this.page = this.addOptional(IntegerParameter.Factory.create("page").setDefaultValue(1));
+        this.player = this.addOptional(OnlinePlayerParameter.Factory.create("player", server));
+        this.match = this.addOptional(LowerCaseParameter.Factory.create("match"));
     }
 
     // usage: /<command> [page] [player] [match]
     @Override
-    protected boolean execute(final ExecutionRequest request) throws ArgumentParseException {
+    protected boolean executeImplementation(final ExecutionRequest request) throws CancellationContingency {
         final Integer page = request.parse(this.page);
         final Player player = request.parse(this.player);
         final String match = request.parse(this.match);

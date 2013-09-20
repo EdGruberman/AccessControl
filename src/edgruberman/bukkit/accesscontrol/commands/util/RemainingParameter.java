@@ -3,8 +3,6 @@ package edgruberman.bukkit.accesscontrol.commands.util;
 import java.util.Collections;
 import java.util.List;
 
-import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
-
 public class RemainingParameter extends Parameter<List<String>> {
 
     public RemainingParameter(final RemainingParameter.Factory factory) {
@@ -12,7 +10,7 @@ public class RemainingParameter extends Parameter<List<String>> {
     }
 
     @Override
-    public List<String> parse(final ExecutionRequest request) throws ArgumentParseException {
+    public List<String> parseParameter(final ExecutionRequest request) throws ArgumentContingency {
         if (this.index >= request.getArguments().size()) return Collections.emptyList();
         return request.getArguments().subList(this.index, request.getArguments().size());
     }
@@ -23,17 +21,18 @@ public class RemainingParameter extends Parameter<List<String>> {
 
     public static class Factory extends Parameter.Factory<RemainingParameter, List<String>, RemainingParameter.Factory> {
 
-        public static RemainingParameter.Factory create(final String name, final ConfigurationCourier courier) {
-            return new RemainingParameter.Factory(name, courier);
-        }
-
-        public Factory(final String name, final ConfigurationCourier courier) {
-            super(name, courier);
+        public static RemainingParameter.Factory create(final String name) {
+            return new RemainingParameter.Factory().setName(name);
         }
 
         @Override
         public RemainingParameter build() {
             return new RemainingParameter(this);
+        }
+
+        @Override
+        public RemainingParameter.Factory cast() {
+            return this;
         }
 
     }
