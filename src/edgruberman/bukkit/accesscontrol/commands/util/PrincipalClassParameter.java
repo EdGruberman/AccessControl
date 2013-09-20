@@ -33,7 +33,7 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
 
     @Override
     public Class<? extends Principal> parseLimited(final ExecutionRequest request) throws ArgumentContingency {
-        return PrincipalClassParameter.ACCEPTABLE.get(request.getArgument(this.begin));
+        return PrincipalClassParameter.ACCEPTABLE.get(request.getArgument(this.index));
     }
 
 

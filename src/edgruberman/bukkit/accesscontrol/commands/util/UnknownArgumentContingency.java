@@ -10,7 +10,7 @@ public class UnknownArgumentContingency extends ArgumentContingency {
         super(request, parameter,
                 MessageFormat.format("command \"/{0}\" sent from {1}:\"{2}\" supplied unrecognizable value \"{3}\" for parameter \"{4}\" of type {5}"
                 , request.getLabel(), request.getSender().getClass().getSimpleName(), request.getSender().getName()
-                , request.getArgument(parameter.getBegin()), parameter.getName(), parameter.getClass().getName())
+                , request.getArgument(parameter.getIndex()), parameter.getName(), parameter.getClass().getName())
         );
     }
 

@@ -42,19 +42,12 @@ public abstract class ConfigurationExecutor extends Executor {
 
         } catch (final MissingArgumentContingency m) {
             this.courier.send(request.getSender(), "argument-missing"
-                    , new Object[] {
-                            m.getParameter().getName()
-                            , m.getParameter().getSyntax()
-                    });
+                    , new Object[] { m.getParameter().getName(), m.getParameter().getSyntax() });
             return false;
 
         } catch (final UnknownArgumentContingency u) {
             this.courier.send(request.getSender(), "argument-unknown"
-                    , new Object[] {
-                            u.getParameter().getName()
-                            , u.getParameter().getSyntax()
-                            , JoinList.join(u.getRequest().getArguments(u.getParameter()))
-                    });
+                    , new Object[] { u.getParameter().getName(), u.getParameter().getSyntax(), u.getArgument() });
             return false;
         }
     };

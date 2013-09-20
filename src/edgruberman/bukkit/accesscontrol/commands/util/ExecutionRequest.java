@@ -39,17 +39,14 @@ public final class ExecutionRequest {
         return Collections.unmodifiableList(this.arguments);
     }
 
-    /** @return empty if no arguments were supplied */
-    public List<String> getArguments(final Parameter<?> parameter) {
-        final int begin = parameter.getBegin();
-        if (begin >= this.arguments.size()) return Collections.emptyList();
-        final int end = Math.min(parameter.getEnd(), this.arguments.size());
-        return this.arguments.subList(begin, end);
+    /** @return null if argument was not supplied for parameter */
+    public String getArgument(final Parameter<?> parameter) {
+        return this.getArgument(parameter.getIndex());
     }
 
     /** @return null if argument at index was not supplied */
     public String getArgument(final int index) {
-        if (index < 0 || index >= this.arguments.size()) return null;
+        if (index >= this.arguments.size()) return null;
         return this.arguments.get(index);
     }
 
@@ -69,9 +66,9 @@ public final class ExecutionRequest {
         return result;
     }
 
-    /** @return true when at least one argument was supplied for parameter */
+    /** @return true when argument has been supplied for parameter */
     public boolean isExplicit(final Parameter<?> parameter) {
-        return parameter.getBegin() < this.arguments.size();
+        return parameter.getIndex() < this.arguments.size();
     }
 
 }

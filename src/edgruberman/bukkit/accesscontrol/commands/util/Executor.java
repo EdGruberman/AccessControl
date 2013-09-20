@@ -45,8 +45,7 @@ public abstract class Executor implements CommandExecutor {
      * @return the resultant parameter
      */
     protected <P extends Parameter<T>, T> P addParameter(final Parameter.Factory<P, T, ?> factory) {
-        final int next = ( !this.parameters.isEmpty() ? this.parameters.get(this.parameters.size() - 1).getEnd() : 0 );
-        final P result = factory.setBegin(next).build();
+        final P result = factory.setIndex(this.parameters.size()).build();
         this.parameters.add(result);
         return result;
     }

@@ -11,8 +11,8 @@ public class RemainingParameter extends Parameter<List<String>> {
 
     @Override
     public List<String> parse(final ExecutionRequest request) throws ArgumentContingency {
-        if (this.begin >= request.getArguments().size()) return Collections.emptyList();
-        return request.getArguments().subList(this.begin, request.getArguments().size());
+        if (this.index >= request.getArguments().size()) return Collections.emptyList();
+        return request.getArguments().subList(this.index, request.getArguments().size());
     }
 
 
