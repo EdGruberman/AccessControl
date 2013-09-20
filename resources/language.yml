@@ -17,7 +17,7 @@ revoke-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready defaults §f{
 reload: '§f-> §2Reloaded §7{1} plugin' # 0 = generated, 1 = plugin name
 requires-player: '§f-> §cOnly in-game players§7 can use the §b/{1} §7command' # 0 = generated, 1 = label
 argument-missing: '§f-> §cMissing §7required argument§8: {2}' # 0 = generated, 1 = name 2 = syntax
-argument-unknown: '§f-> §eUnknown§7 argument for {2}§8: §f{3}' # 0 = generated, 1 = name, 2 = syntax, 3 = value
+argument-unknown: '§f-> §cUnknown§7 argument for {2}§8: §f{3}' # 0 = generated, 1 = name, 2 = syntax, 3 = value
 argument-syntax-name: '§3§o{0}' # 0 = name
 argument-syntax-limited-item: '§b{0}' # 0 = value
 argument-syntax-limited-delimiter: '§3|'
