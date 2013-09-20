@@ -13,7 +13,7 @@ public class OnlinePlayerParameter extends Parameter<Player> {
     }
 
     @Override
-    public Player parse(final ExecutionRequest request) throws ArgumentContingency {
+    protected Player parse(final ExecutionRequest request) throws ArgumentContingency {
         String argument = request.getArgument(this.index);
 
         if (argument == null) {

@@ -12,7 +12,7 @@ public class LowerCaseParameter extends Parameter<String> {
     }
 
     @Override
-    public String parse(final ExecutionRequest request) throws ArgumentContingency {
+    protected String parse(final ExecutionRequest request) throws ArgumentContingency {
         final String argument = request.getArgument(this.index);
         if (argument == null) return null;
 

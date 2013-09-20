@@ -12,7 +12,7 @@ public abstract class LimitedParameter<T> extends Parameter<T> {
     }
 
     @Override
-    public T parse(final ExecutionRequest request) throws ArgumentContingency {
+    protected T parse(final ExecutionRequest request) throws ArgumentContingency {
         final String argument = request.getArgument(this.index);
         if (argument == null) return null;
 

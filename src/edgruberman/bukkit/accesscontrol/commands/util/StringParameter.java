@@ -7,7 +7,7 @@ public class StringParameter extends Parameter<String> {
     }
 
     @Override
-    public String parse(final ExecutionRequest request) throws ArgumentContingency {
+    protected String parse(final ExecutionRequest request) throws ArgumentContingency {
         return request.getArgument(this.index);
     }
 
