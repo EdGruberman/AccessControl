@@ -2,26 +2,59 @@ package edgruberman.bukkit.accesscontrol.commands.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.text.StrTokenizer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 /**
  * parses arguments according to a {@link StrTokenizer} definition
- * and defined parameters
+ * and defined {@link Parameter}s
+ * @version 1.2.0
  */
 public abstract class Executor implements CommandExecutor {
 
+    static {
+        final List<Class<? extends CommandSender>> any = new ArrayList<Class<? extends CommandSender>>();
+        any.add(CommandSender.class);
+        SENDERS_ANY = Collections.unmodifiableList(any);
+
+        final List<Class<? extends CommandSender>> players = new ArrayList<Class<? extends CommandSender>>();
+        players.add(Player.class);
+        SENDERS_PLAYERS = Collections.unmodifiableList(players);
+    }
+
+    public static final List<Class<? extends CommandSender>> SENDERS_ANY;
+    public static final List<Class<? extends CommandSender>> SENDERS_PLAYERS;
+
+    public static final List<Class<? extends CommandSender>> DEFAULT_SENDERS = Executor.SENDERS_ANY;
+
+
+
+
+
     protected final StrTokenizer tokenizer = new StrTokenizer();
+    protected final List<Class<? extends CommandSender>> senders = new ArrayList<Class<? extends CommandSender>>(Executor.DEFAULT_SENDERS);
     protected final List<Parameter<?>> parameters = new ArrayList<Parameter<?>>();
 
     /** configures tokenizer to delimit by spaces using double quotes as the quote character */
     protected Executor() {
         this.tokenizer.setDelimiterChar(' ');
         this.tokenizer.setQuoteChar('"');
+    }
+
+    protected void requirePlayer() {
+        this.validSenders(Executor.SENDERS_PLAYERS);
+    }
+
+    protected void validSenders(final Collection<Class<? extends CommandSender>> valid) {
+        this.senders.clear();
+        this.senders.addAll(valid);
     }
 
     /**
@@ -41,7 +74,7 @@ public abstract class Executor implements CommandExecutor {
     }
 
     /**
-     * sets begin to next available index
+     * sets index to next available
      * @return the resultant parameter
      */
     protected <P extends Parameter<T>, T> P addParameter(final Parameter.Factory<P, T, ?> factory) {
@@ -56,6 +89,7 @@ public abstract class Executor implements CommandExecutor {
         final ExecutionRequest request = new ExecutionRequest(sender, command, label, tokenized);
 
         try {
+            if (!this.validate(request)) return true;
             return this.execute(request);
 
         } catch (final CancellationContingency e) {
@@ -64,8 +98,16 @@ public abstract class Executor implements CommandExecutor {
     }
 
     protected List<String> tokenize(final String... args) {
-        this.tokenizer.reset(JoinList.join(Arrays.asList(args)));
+        this.tokenizer.reset(JoinList.join(args));
         return Arrays.asList(this.tokenizer.getTokenArray());
+    }
+
+    protected boolean validate(final ExecutionRequest request) throws CancellationContingency {
+        for (final Class<? extends CommandSender> acceptable : this.senders) {
+            if (acceptable.isAssignableFrom(request.getSender().getClass())) return true;
+        }
+
+        throw new SenderRejectedContingency(request, this.senders);
     }
 
     /**

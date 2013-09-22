@@ -46,8 +46,6 @@ public abstract class PermissionExecutor extends ConfigurationExecutor {
         return this.executePermission(request, permission, principal, context);
     }
 
-    public abstract boolean executePermission(ExecutionRequest request, String permission, Principal principal, ExecutionContext context) throws CancellationContingency;
-
     protected Principal parsePrincipal(final ExecutionRequest request) throws ArgumentContingency {
         final String name = request.parse(this.name).getName().toLowerCase(Locale.ENGLISH);
         final Class<? extends Principal> type = request.parse(this.type);
@@ -92,6 +90,8 @@ public abstract class PermissionExecutor extends ConfigurationExecutor {
 
         return result;
     }
+
+    public abstract boolean executePermission(ExecutionRequest request, String permission, Principal principal, ExecutionContext context) throws CancellationContingency;
 
 
 

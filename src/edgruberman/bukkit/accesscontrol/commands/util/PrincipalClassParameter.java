@@ -13,7 +13,7 @@ import edgruberman.bukkit.accesscontrol.User;
 
 public class PrincipalClassParameter extends LimitedParameter<Class<? extends Principal>> {
 
-    public static final Map<String, Class<? extends Principal>> ACCEPTABLE;
+    public static final Map<String, Class<? extends Principal>> KNOWN;
 
     static {
         final Comparator<String> insensitive = new CaseInsensitiveComparator();
@@ -22,7 +22,7 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
         result.put(User.class.getSimpleName().toLowerCase(Locale.ENGLISH), User.class);
         result.put(Group.class.getSimpleName().toLowerCase(Locale.ENGLISH), Group.class);
 
-        ACCEPTABLE = Collections.unmodifiableMap(result);
+        KNOWN = Collections.unmodifiableMap(result);
     }
 
 
@@ -33,7 +33,7 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
 
     @Override
     protected Class<? extends Principal> parseLimited(final ExecutionRequest request) throws ArgumentContingency {
-        return PrincipalClassParameter.ACCEPTABLE.get(request.getArgument(this.index));
+        return PrincipalClassParameter.KNOWN.get(request.getArgument(this.index));
     }
 
 
@@ -47,13 +47,13 @@ public class PrincipalClassParameter extends LimitedParameter<Class<? extends Pr
         }
 
         public Factory() {
-            this.acceptable = PrincipalClassParameter.ACCEPTABLE.keySet();
+            this.known = PrincipalClassParameter.KNOWN.keySet();
         }
 
-        /** @deprecated unsupported; always set to {@link PrincipalClassParameter#ACCEPTABLE ACCEPTABLE.keySet()} */
+        /** @deprecated unsupported; always set to {@link PrincipalClassParameter#KNOWN KNOWN.keySet()} */
         @Override
         @Deprecated
-        public PrincipalClassParameter.Factory setAcceptable(final Collection<String> acceptable) {
+        public PrincipalClassParameter.Factory setKnown(final Collection<String> known) {
             throw new UnsupportedOperationException();
         }
 
