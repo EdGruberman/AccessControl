@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
@@ -17,7 +16,6 @@ import java.util.Map;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 
-import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -25,7 +23,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 /**
  * @author EdGruberman (ed@rjump.com)
- * @version 1.3.4
+ * @version 1.4.0
  */
 public class CustomPlugin extends JavaPlugin {
 
@@ -92,7 +90,6 @@ public class CustomPlugin extends JavaPlugin {
         } catch (final Exception e) {
             throw new RuntimeException("Unable to load configuration file: " + existing.getPath(), e);
         }
-        yaml.setDefaults(this.loadEmbeddedConfig(resource));
         if (required == null) return yaml;
 
         // verify required or later version
@@ -134,32 +131,6 @@ public class CustomPlugin extends JavaPlugin {
             throw new IllegalStateException("Unable to archive configuration file \"" + existing.getPath() + "\" with version \"" + version + "\" to \"" + backup.getPath() + "\"");
 
         this.getLogger().warning("Archived configuration file \"" + existing.getPath() + "\" with version \"" + version + "\" to \"" + backup.getPath() + "\"");
-    }
-
-    /** load configuration from jar without extracting to file system **/
-    public Configuration loadEmbeddedConfig(final String resource) {
-        final YamlConfiguration config = new YamlConfiguration();
-        final InputStream defaults = this.getResource(resource);
-        if (defaults == null) return config;
-
-        final InputStreamReader reader = new InputStreamReader(defaults, CustomPlugin.CONFIGURATION_SOURCE);
-        final StringBuilder builder = new StringBuilder();
-        final BufferedReader input = new BufferedReader(reader);
-        try {
-            try {
-                String line;
-                while ((line = input.readLine()) != null)
-                    builder.append(line).append(CustomPlugin.LINE_SEPARATOR);
-            } finally {
-                input.close();
-            }
-            config.loadFromString(builder.toString());
-
-        } catch (final Exception e) {
-            throw new RuntimeException("Unable to load embedded configuration: " + resource, e);
-        }
-
-        return config;
     }
 
     public void setLogLevel(final String name) {
