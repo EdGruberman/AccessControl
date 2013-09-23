@@ -1,9 +1,6 @@
 package edgruberman.bukkit.accesscontrol.messaging;
 
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -177,7 +174,7 @@ public interface Courier {
 
     /**
      * message content patterns are referenced by configuration keys
-     * @version 8.0.0
+     * @version 9.0.0
      */
     public static class ConfigurationCourier extends PatternCourier {
 
@@ -202,44 +199,21 @@ public interface Courier {
             return this.formatCode;
         }
 
-        /** @return empty list if key not found or key is not a string */
-        public List<String> getStringList(final String key) {
-            if (this.base.isList(key))
-                return this.base.getStringList(key);
-
-            if (this.base.isString(key))
-                return Arrays.asList(this.base.getString(key));
-
-            return Collections.emptyList();
-        }
-
         /**
          * retrieve pattern at key and translate alternate codes into Minecraft formatting codes
          * @param key path relative to {@link #getBase base} that contains
          * message pattern
-         * @return null if empty
+         * @return null if key does not exist or is empty
          */
         public String translate(final String key) {
-            final List<String> result = this.getStringList(key);
-            if (result.isEmpty() || result.get(0) == null) {
-                this.logger.log(Level.FINEST, "String value not found for {0}{1}{2}", new Object[] { this.base.getCurrentPath(), this.base.getRoot().options().pathSeparator(), key });
+            final String pattern = this.base.getString(key);
+            if (pattern == null || pattern.length() == 0) {
+                final String path = this.base.getCurrentPath();
+                this.logger.log(Level.FINEST, "String value not found for {1,choice,0#|1#{2}{3}}{0}", new Object[] { key, path.length(), path, this.base.getRoot().options().pathSeparator() });
                 return null;
             }
 
-            final StringBuilder sb = new StringBuilder();
-            for (final String s : result) {
-                if (sb.length() > 0) sb.append("\n");
-
-                if (this.formatCode != ChatColor.COLOR_CHAR) {
-                    final String translated = ChatColor.translateAlternateColorCodes(this.formatCode, s);
-                    sb.append(translated);
-
-                } else {
-                    sb.append(s);
-                }
-            }
-
-            return sb.toString();
+            return ChatColor.translateAlternateColorCodes(this.formatCode, pattern);
         }
 
         /**
@@ -247,22 +221,25 @@ public interface Courier {
          * supplied arguments
          * @param key path relative to {@link #getBase base} that contains
          * message pattern
+         * @return null if key does not exist or is empty
          */
         @Override
         public String format(final String key, final Object... arguments) {
             final String pattern = this.translate(key);
+            if (pattern == null) return null;
             return super.format(pattern, arguments);
-     }
+        }
 
         /**
          * {@inheritDoc}
          * @param key path relative to {@link #getBase base} that contains
          * message pattern
-         * @return null if key does not exist or is null
+         * @return null if key does not exist or is empty
          */
         @Override
         public Message draft(final String key, final Object... arguments) {
             final String pattern = this.translate(key);
+            if (pattern == null) return null;
             return super.draft(pattern, arguments);
         }
 
@@ -273,8 +250,11 @@ public interface Courier {
          * ignored and not sent)
          */
         @Override
-        public void send(final CommandSender sender, final String key, final Object... arguments) {
-            super.send(sender, key, arguments);
+        public void send(final CommandSender sender, final String pattern, final Object... arguments) {
+            final Message message = this.draft(pattern, arguments);
+            if (message == null) return;
+            final RecipientList recipients = RecipientList.Sender.create(sender);
+            this.submit(recipients, message);
         }
 
         /**
@@ -284,8 +264,11 @@ public interface Courier {
          * and not sent)
          */
         @Override
-        public void broadcast(final String key, final Object... arguments) {
-            super.broadcast(key, arguments);
+        public void broadcast(final String pattern, final Object... arguments) {
+            final Message message = this.draft(pattern, arguments);
+            if (message == null) return;
+            final RecipientList recipients = RecipientList.ServerPlayers.create(this.server);
+            this.submit(recipients, message);
         }
 
         /**
@@ -295,8 +278,11 @@ public interface Courier {
          * and not sent)
          */
         @Override
-        public void announce(final World world, final String key, final Object... arguments) {
-            super.announce(world, key, arguments);
+        public void announce(final World world, final String pattern, final Object... arguments) {
+            final Message message = this.draft(pattern, arguments);
+            if (message == null) return;
+            final RecipientList recipients = RecipientList.WorldPlayers.create(world);
+            this.submit(recipients, message);
         }
 
         /**
@@ -306,8 +292,11 @@ public interface Courier {
          * and not sent)
          */
         @Override
-        public void publish(final String permission, final String key, final Object... arguments) {
-            super.publish(permission, key, arguments);
+        public void publish(final String permission, final String pattern, final Object... arguments) {
+            final Message message = this.draft(pattern, arguments);
+            if (message == null) return;
+            final RecipientList recipients = RecipientList.Subscribers.create(this.server.getPluginManager(), permission);
+            this.submit(recipients, message);
         }
 
 
