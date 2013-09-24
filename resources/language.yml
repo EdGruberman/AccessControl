@@ -1,26 +1,55 @@
+# @version @VERSION@
+#
+# ---- arguments ----
+# check: 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = set(0=default|1=set), 5 = source
+# effective-permission: 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = source
+# effective-summary: 0 = generated, 1 = current page, 2 = total pages
+# effective-none: 0 = generated, 1 = match
+# trace-context: 0 = generated, 1 = context, 2 = name, 3 = type(0=user|1=group)
+# trace-assignment: 0 = generated, 1 = permission, 2 = principal name, 3 = principal type(0=user|1=group), 4 = value(0=false|1=true)
+#   , 5 = direct(0=inherited|1=direct), 6 = inherited name, 7 = inherited type(-1=direct|0=user|1=group), 8 = context, 9 = relationship(0=permission|1=parent)
+# trace-relationship: 0 = generated, 1 = permission, 2 = principal name, 3 = principal type(0=user|1=group), 4 = parent name
+#   , 5 = parent value(0=false|1=true), 6 = child name, 7 = child value(0=false|1=true), 8 = relationship(0=permission|1=parent)
+# trace-default: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = value(0=false|1=true), 5 = default
+# default: 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = default, 5 = registered(0=false|1=true)
+# deny-success: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context, 5 = previous(0=default|1=granted)
+# deny-already: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context
+# grant-success: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context, 5 = previous(-1=denied|0=default)
+# grant-already: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context
+# revoke-success: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context, 5 = previous(-1=denied|1=granted)
+# revoke-already: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context
+# reload: 0 = generated, 1 = plugin name
+# requires-player: 0 = generated, 1 = label
+# argument-missing: 0 = generated, 1 = name 2 = syntax
+# argument-unknown: 0 = generated, 1 = name, 2 = syntax, 3 = value
+# argument-syntax-name: 0 = name
+# argument-syntax-limited-item: 0 = value
+# argument-syntax-required: 0 = argument
+# argument-syntax-optional: 0 = argument
+#
+# ---- patterns ----
 format-code: '§'
-check: '§f-> {2} {4,choice,0#§ddefaults|1#§3sets} §f{1} {3,choice,0#§cfalse|1#§atrue} §8(§7{5}§8)' # 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = set(0=default|1=set), 5 = source
-effective-permission: '§f-> {2} §3sets §f{1} {3,choice,0#§cfalse|1#§atrue} §8(§7{4}§8)' # 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = source
-effective-summary: '§f-> §7Page §f{1}§7 of {2}' # 0 = generated, 1 = current page, 2 = total pages
-effective-none: '§f-> §eNo permissions found§7 that match§8: §f{1}' # 0 = generated, 1 = match
-trace-context: '§f-> §8-- §7Trace Context for §f{2} §7{3,choice,0#user|1#group}§8: §f{1}' # 0 = generated, 1 = context, 2 = name, 3 = type(0=user|1=group)
-trace-assignment: '§f-> {9,choice,0#§f|1#§7}{1}§8: {4,choice,0#§cfalse|1#§atrue} §7is {5,choice,0#§6inherited|1#§3directly applied}{5,choice,0# §7from §f{6} |1#}§7{7,choice,-1#|0#user|1#group} in §f{8}' # 0 = generated, 1 = permission, 2 = principal name, 3 = principal type(0=user|1=group), 4 = value(0=false|1=true), 5 = direct(0=inherited|1=direct), 6 = inherited name, 7 = inherited type(-1=direct|0=user|1=group), 8 = context, 9 = relationship(0=permission|1=parent)
-trace-relationship: '§f-> §8^^ §7{4}§8: {5,choice,0#§cfalse|1#§atrue} §7sets {8,choice,0#§f|1#§7}{6}§8: {7,choice,0#§cfalse|1#§atrue}' # 0 = generated, 1 = permission, 2 = principal name, 3 = principal type(0=user|1=group), 4 = parent name, 5 = parent value(0=false|1=true), 6 = child name, 7 = child value(0=false|1=true), 8 = relationship(0=permission|1=parent)
-trace-default: '§f-> §f{1} §is not assigned §8(§7Default§8: §d{5} §8= {4,choice,0#§cfalse|1#§atrue}§8)' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = value(0=false|1=true), 5 = default
-default: '§f-> §7Default of §f{1} §7is §d{4} §8(§f{2} §8= {3,choice,0#§cfalse|1#§atrue}§8, §7{5,choice,0#Unregistered|1#Registered}§8)' # 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = default, 5 = registered(0=false|1=true)
-deny-success: '§f-> §2Denied §f{2} §7{3,choice,0#user|1#group} §f{1} §7in §f{4} §8(§7Previously {5,choice,0#default|1#granted}§8)' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context, 5 = previous(0=default|1=granted)
-deny-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready denied §f{1} §7in §f{4}' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context
-grant-success: '§f-> §2Granted §f{2} §7{3,choice,0#user|1#group} §f{1} §7in §f{4} §8(§7Previously {5,choice,-1#denied|0#default}§8)' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context, 5 = previous(-1=denied|0=default)
-grant-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready granted §f{1} §7in §f{4}' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context
-revoke-success: '§f-> §2Revoked §7{5,choice,-1#deny|1#grant} on §f{2} §7{3,choice,0#user|1#group} §7for §f{1} §7in §f{4}' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context, 5 = previous(-1=denied|1=granted)
-revoke-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready defaults §f{1} §7in §f{4}' # 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context
-reload: '§f-> §2Reloaded §7{1} plugin' # 0 = generated, 1 = plugin name
-requires-player: '§f-> §cOnly in-game players§7 can use the §b/{1} §7command' # 0 = generated, 1 = label
-argument-missing: '§f-> §cMissing §7required argument§8: {2}' # 0 = generated, 1 = name 2 = syntax
-argument-unknown: '§f-> §cUnknown§7 argument for {2}§8: §f{3}' # 0 = generated, 1 = name, 2 = syntax, 3 = value
-argument-syntax-name: '§3§o{0}' # 0 = name
-argument-syntax-limited-item: '§b{0}' # 0 = value
+check: '§f-> {2} {4,choice,0#§ddefaults|1#§3sets} §f{1} {3,choice,0#§cfalse|1#§atrue} §8(§7{5}§8)'
+effective-permission: '§f-> {2} §3sets §f{1} {3,choice,0#§cfalse|1#§atrue} §8(§7{4}§8)'
+effective-summary: '§f-> §7Page §f{1}§7 of {2}'
+effective-none: '§f-> §eNo permissions found§7 that match§8: §f{1}'
+trace-context: '§f-> §8-- §7Trace Context for §f{2} §7{3,choice,0#user|1#group}§8: §f{1}'
+trace-assignment: '§f-> {9,choice,0#§f|1#§7}{1}§8: {4,choice,0#§cfalse|1#§atrue} §7is {5,choice,0#§6inherited|1#§3directly applied}{5,choice,0# §7from §f{6} |1#}§7{7,choice,-1#|0#user|1#group} in §f{8}'
+trace-relationship: '§f-> §8^^ §7{4}§8: {5,choice,0#§cfalse|1#§atrue} §7sets {8,choice,0#§f|1#§7}{6}§8: {7,choice,0#§cfalse|1#§atrue}'
+trace-default: '§f-> §f{1} §is not assigned §8(§7Default§8: §d{5} §8= {4,choice,0#§cfalse|1#§atrue}§8)'
+default: '§f-> §7Default of §f{1} §7is §d{4} §8(§f{2} §8= {3,choice,0#§cfalse|1#§atrue}§8, §7{5,choice,0#Unregistered|1#Registered}§8)'
+deny-success: '§f-> §2Denied §f{2} §7{3,choice,0#user|1#group} §f{1} §7in §f{4} §8(§7Previously {5,choice,0#default|1#granted}§8)'
+deny-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready denied §f{1} §7in §f{4}'
+grant-success: '§f-> §2Granted §f{2} §7{3,choice,0#user|1#group} §f{1} §7in §f{4} §8(§7Previously {5,choice,-1#denied|0#default}§8)'
+grant-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready granted §f{1} §7in §f{4}'
+revoke-success: '§f-> §2Revoked §7{5,choice,-1#deny|1#grant} on §f{2} §7{3,choice,0#user|1#group} §7for §f{1} §7in §f{4}'
+revoke-already: '§f-> {2} §7{3,choice,0#user|1#group} §ealready defaults §f{1} §7in §f{4}'
+reload: '§f-> §2Reloaded §7{1} plugin'
+requires-player: '§f-> §cOnly in-game players§7 can use the §b/{1} §7command'
+argument-missing: '§f-> §cMissing §7required argument§8: {2}'
+argument-unknown: '§f-> §cUnknown§7 argument for {2}§8: §f{3}'
+argument-syntax-name: '§3§o{0}'
+argument-syntax-limited-item: '§b{0}'
 argument-syntax-limited-delimiter: '§3|'
-argument-syntax-required: '{0}' # 0 = argument
-argument-syntax-optional: '§3[{0}§3]' # 0 = argument
-version: @VERSION@
+argument-syntax-required: '{0}'
+argument-syntax-optional: '§3[{0}§3]'

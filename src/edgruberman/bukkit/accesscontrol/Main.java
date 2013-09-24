@@ -25,9 +25,9 @@ import edgruberman.bukkit.accesscontrol.events.AuthorityReleaseEvent;
 import edgruberman.bukkit.accesscontrol.events.DescriptorRegistrationEvent;
 import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 import edgruberman.bukkit.accesscontrol.repositories.YamlRepository;
-import edgruberman.bukkit.accesscontrol.util.CustomPlugin;
+import edgruberman.bukkit.accesscontrol.util.BasePlugin;
 
-public final class Main extends CustomPlugin implements Listener {
+public final class Main extends BasePlugin implements Listener {
 
     private static Authority authority = null;
 
@@ -40,7 +40,7 @@ public final class Main extends CustomPlugin implements Listener {
     @Override
     public void onLoad() {
         this.putConfigMinimum("8.0.0a0");
-        this.putConfigMinimum("language.yml", "8.0.0b76");
+        this.putConfigMinimum("language.yml", "8.0.0b90");
     }
 
     @Override
