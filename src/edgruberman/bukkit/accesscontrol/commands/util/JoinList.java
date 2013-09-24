@@ -8,9 +8,9 @@ import java.util.Collection;
 import java.util.Collections;
 
 /**
- * store object references for lazy MessageFormat formatting
+ * store parameters for lazy MessageFormat formatting
  * @author EdGruberman (ed@rjump.com)
- * @version 2.0.0
+ * @version 2.0.1
  */
 public class JoinList<E> extends ArrayList<E> {
 
@@ -33,10 +33,12 @@ public class JoinList<E> extends ArrayList<E> {
         return JoinList.DefaultFactory.create();
     }
 
+    /** concatenate with default delimiter of {@value #DEFAULT_DELIMITER} */
     public static String join(final Collection<?> elements) {
         return JoinList.factory().elements(elements).join();
     }
 
+    /** concatenate with default delimiter of {@value #DEFAULT_DELIMITER} */
     public static <T> String join(final T... elements) {
         return JoinList.join(Arrays.asList(elements));
     }
@@ -61,30 +63,39 @@ public class JoinList<E> extends ArrayList<E> {
         this.last = last;
     }
 
-    /** add arguments as single element array */
+    protected JoinList(final JoinList.Factory<?, ?> factory) {
+        super( factory.elements.size() > 0 ? factory.elements.size() : 10 );
+        this.format = factory.format;
+        this.item = factory.item;
+        this.delimiter = factory.delimiter;
+        this.last = factory.last;
+    }
+
+    /** add arguments as single element of array */
     public boolean add(final Object... arguments) {
         return this.add((Object) arguments);
     }
 
+    /** format elements and concatenate */
     public String join() {
-        final StringBuilder items = new StringBuilder();
+        final StringBuilder result = new StringBuilder();
 
         final int last = this.size() - 1;
         for (int i = 0; i < this.size(); i++) {
             final E element = this.get(i);
 
-            // append delimiter
-            if (items.length() > 0) {
+            // prefix delimiter
+            if (result.length() > 0) {
                 if (i < last) {
-                    items.append(this.delimiter);
+                    result.append(this.delimiter);
                 } else {
-                    items.append(this.last);
+                    result.append(this.last);
                 }
             }
 
             // prevent recursion
             if (element == this) {
-                items.append("{this}");
+                result.append("{this}");
                 continue;
             }
 
@@ -92,10 +103,10 @@ public class JoinList<E> extends ArrayList<E> {
             final MessageFormat message = new MessageFormat(this.item);
             final Object[] arguments = ( element instanceof Object[] ? (Object[]) element : new Object[] { element } );
             final StringBuffer sb = message.format(arguments, new StringBuffer(), new FieldPosition(0));
-            items.append(sb);
+            result.append(sb);
         }
 
-        return MessageFormat.format(this.format, items);
+        return MessageFormat.format(this.format, result);
     }
 
     @Override
@@ -116,27 +127,45 @@ public class JoinList<E> extends ArrayList<E> {
 
         protected Collection<? extends T> elements = Collections.emptyList();
 
+        /**
+         * @param format pattern used to format resultant joined output
+         * (default is {@value #DEFAULT_FORMAT})
+         */
         public F format(final String format) {
             this.format = format;
             return this.cast();
         }
 
+        /**
+         * @param item pattern used to format each element in list as
+         * parameters (default is {@value #DEFAULT_ITEM})
+         */
         public F item(final String item) {
             this.item = item;
             return this.cast();
         }
 
+        /**
+         * @param delimiter appended between all items except before the last
+         * (default is {@value #DEFAULT_DELIMITER})
+         */
         public F delimiter(final String delimiter) {
             this.delimiter = delimiter;
             return this.cast();
         }
 
+        /**
+         * @param last delimiter appended before last item
+         * (default is {@value #DEFAULT_LAST})
+         */
         public F last(final String last) {
             this.last = last;
             return this.cast();
         }
 
-
+        /**
+         * @param elements initialize list with elements
+         */
         public F elements(final Collection<? extends T> elements) {
             this.elements = elements;
             return this.cast();
@@ -145,7 +174,7 @@ public class JoinList<E> extends ArrayList<E> {
         protected abstract F cast();
 
         public JoinList<T> build() {
-            final JoinList<T> result = new JoinList<T>(this.format, this.item, this.delimiter, this.last);
+            final JoinList<T> result = new JoinList<T>(this);
             result.addAll(this.elements);
             return result;
         }
