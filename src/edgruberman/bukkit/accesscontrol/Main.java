@@ -25,9 +25,9 @@ import edgruberman.bukkit.accesscontrol.events.AuthorityReleaseEvent;
 import edgruberman.bukkit.accesscontrol.events.DescriptorRegistrationEvent;
 import edgruberman.bukkit.accesscontrol.messaging.Courier.ConfigurationCourier;
 import edgruberman.bukkit.accesscontrol.repositories.YamlRepository;
-import edgruberman.bukkit.accesscontrol.util.BasePlugin;
+import edgruberman.bukkit.accesscontrol.util.DefaultPlugin;
 
-public final class Main extends BasePlugin implements Listener {
+public final class Main extends DefaultPlugin implements Listener {
 
     private static Authority authority = null;
 

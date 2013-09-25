@@ -20,11 +20,14 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import edgruberman.bukkit.accesscontrol.versioning.StandardVersion;
+import edgruberman.bukkit.accesscontrol.versioning.Version;
+
 /**
  * @author EdGruberman (ed@rjump.com)
  * @version 2.0.0
  */
-public class BasePlugin extends JavaPlugin {
+public class DefaultPlugin extends JavaPlugin {
 
     public static final Charset CONFIGURATION_TARGET = Charset.defaultCharset();
     public static final Charset CONFIGURATION_SOURCE = Charset.forName("UTF-8");
@@ -39,14 +42,14 @@ public class BasePlugin extends JavaPlugin {
     private char pathSeparator = '.';
 
     public void putConfigMinimum(final String version) {
-        this.putConfigMinimum(BasePlugin.CONFIGURATION_FILE, version);
+        this.putConfigMinimum(DefaultPlugin.CONFIGURATION_FILE, version);
     }
 
     public void putConfigMinimum(final String resource, final String version) {
-        this.configurationMinimums.put(resource, Version.parse(version));
+        this.configurationMinimums.put(resource, StandardVersion.parse(version));
     }
 
-    public BasePlugin setPathSeparator(final char separator) {
+    public DefaultPlugin setPathSeparator(final char separator) {
         this.pathSeparator = separator;
         return this;
     }
@@ -59,14 +62,14 @@ public class BasePlugin extends JavaPlugin {
 
     @Override
     public void reloadConfig() {
-        this.config = this.loadConfig(BasePlugin.CONFIGURATION_FILE);
+        this.config = this.loadConfig(DefaultPlugin.CONFIGURATION_FILE);
         this.setLogLevel(this.getConfig().getString("log-level"));
-        this.getLogger().log(Level.FINEST, "YAML configuration file encoding: {0}", BasePlugin.CONFIGURATION_TARGET);
+        this.getLogger().log(Level.FINEST, "YAML configuration file encoding: {0}", DefaultPlugin.CONFIGURATION_TARGET);
     }
 
     @Override
     public void saveDefaultConfig() {
-        this.extractConfig(BasePlugin.CONFIGURATION_FILE, false);
+        this.extractConfig(DefaultPlugin.CONFIGURATION_FILE, false);
     }
 
     /** @param resource file name relative to plugin data folder and base of jar (embedded file extracted to file system if does not exist) */
@@ -85,7 +88,7 @@ public class BasePlugin extends JavaPlugin {
         try {
             yaml.load(existing);
         } catch (final InvalidConfigurationException e) {
-            throw new IllegalStateException("Unable to load configuration file: " + existing.getPath() + " (Ensure file is encoded as " + BasePlugin.CONFIGURATION_TARGET + ")", e);
+            throw new IllegalStateException("Unable to load configuration file: " + existing.getPath() + " (Ensure file is encoded as " + DefaultPlugin.CONFIGURATION_TARGET + ")", e);
         } catch (final Exception e) {
             throw new RuntimeException("Unable to load configuration file: " + existing.getPath(), e);
         }
@@ -106,13 +109,13 @@ public class BasePlugin extends JavaPlugin {
         final File config = new File(this.getDataFolder(), resource);
         if (config.exists() && !replace) return;
 
-        this.getLogger().log(Level.FINE, "Extracting configuration file {1} {0} as {2}", new Object[] { resource, BasePlugin.CONFIGURATION_SOURCE.name(), BasePlugin.CONFIGURATION_TARGET.name() });
+        this.getLogger().log(Level.FINE, "Extracting configuration file {1} {0} as {2}", new Object[] { resource, DefaultPlugin.CONFIGURATION_SOURCE.name(), DefaultPlugin.CONFIGURATION_TARGET.name() });
         config.getParentFile().mkdirs();
 
         final char[] cbuf = new char[1024]; int read;
         try {
-            final Reader in = new BufferedReader(new InputStreamReader(this.getResource(resource), BasePlugin.CONFIGURATION_SOURCE));
-            final Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(config), BasePlugin.CONFIGURATION_TARGET));
+            final Reader in = new BufferedReader(new InputStreamReader(this.getResource(resource), DefaultPlugin.CONFIGURATION_SOURCE));
+            final Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(config), DefaultPlugin.CONFIGURATION_TARGET));
             while((read = in.read(cbuf)) > 0) out.write(cbuf, 0, read);
             out.close(); in.close();
 
@@ -123,7 +126,7 @@ public class BasePlugin extends JavaPlugin {
 
     /** make a backup copy of an existing configuration file */
     public void archiveConfig(final String resource, final Version version) {
-        final File backup = new File(this.getDataFolder(), MessageFormat.format(BasePlugin.CONFIGURATION_ARCHIVE, resource.replaceAll("(?i)\\.yml$", ""), version, new Date()));
+        final File backup = new File(this.getDataFolder(), MessageFormat.format(DefaultPlugin.CONFIGURATION_ARCHIVE, resource.replaceAll("(?i)\\.yml$", ""), version, new Date()));
         final File existing = new File(this.getDataFolder(), resource);
 
         if (!existing.renameTo(backup))
@@ -135,7 +138,7 @@ public class BasePlugin extends JavaPlugin {
     public void setLogLevel(final String name) {
         Level level;
         try { level = Level.parse(name); } catch (final Exception e) {
-            level = BasePlugin.DEFAULT_LOG;
+            level = DefaultPlugin.DEFAULT_LOG;
             this.getLogger().warning("Log level defaulted to " + level.getName() + "; Unrecognized java.util.logging.Level: " + name + "; " + e);
         }
 
