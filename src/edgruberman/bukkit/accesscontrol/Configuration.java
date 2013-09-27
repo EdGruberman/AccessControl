@@ -55,6 +55,9 @@ public final class Configuration {
         final ConfigurationDefinition result = new ConfigurationDefinition();
 
         final List<ConfigurationInstruction> v8_0_0b100 = result.createInstructions(StandardVersion.parse("8.0.0b100"));
+        final List<ConfigurationInstruction> v8_0_0b110 = result.createInstructions(StandardVersion.parse("8.0.0b110"));
+        final List<ConfigurationInstruction> v8_0_0b111 = result.createInstructions(StandardVersion.parse("8.0.0b111"));
+
         v8_0_0b100.add(HeaderInstruction.create(
                 "\n"
                 + "---- arguments ----\n"
@@ -100,7 +103,7 @@ public final class Configuration {
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §8-- §7Trace Context for §f{2} §7{3,choice,0#user|1#group}§8: §f{1}", "trace-context"));
         v8_0_0b100.add(PutKeyInstruction.create("§f-> {9,choice,0#§f|1#§7}{1}§8: {4,choice,0#§cfalse|1#§atrue} §7is {5,choice,0#§6inherited|1#§3directly applied}{5,choice,0# §7from §f{6} |1#}§7{7,choice,-1#|0#user|1#group} in §f{8}", "trace-assignment"));
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §8^^ §7{4}§8: {5,choice,0#§cfalse|1#§atrue} §7sets {8,choice,0#§f|1#§7}{6}§8: {7,choice,0#§cfalse|1#§atrue}", "trace-relationship"));
-        v8_0_0b100.add(PutKeyInstruction.create("§f-> §f{1} §is not assigned §8(§7Default§8: §d{5} §8= {4,choice,0#§cfalse|1#§atrue}§8)", "trace-default"));
+        v8_0_0b110.add(PutKeyInstruction.create("§f-> §f{1} §7is not assigned §8(§7Default§8: §d{5} §8= {4,choice,0#§cfalse|1#§atrue}§8)", "trace-default"));
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §7Default of §f{1} §7is §d{4} §8(§f{2} §8= {3,choice,0#§cfalse|1#§atrue}§8, §7{5,choice,0#Unregistered|1#Registered}§8)", "default"));
 
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §2Denied §f{2} §7{3,choice,0#user|1#group} §f{1} §7in §f{4} §8(§7Previously {5,choice,0#default|1#granted}§8)", "deny-success"));
@@ -114,9 +117,9 @@ public final class Configuration {
 
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §2Reloaded §7{1} plugin", "reload"));
 
-        v8_0_0b100.add(PutKeyInstruction.create("sender-rejected", "§f-> §cOnly {1} §7can use the §b/{2} §7command"));
-        v8_0_0b100.add(PutKeyInstruction.create("sender-rejected-valid-item", "§c{0}s"));
-        v8_0_0b100.add(PutKeyInstruction.create("sender-rejected-valid-delimiter", "§4,"));
+        v8_0_0b111.add(PutKeyInstruction.create("§f-> §cOnly {1} §7can use the §b/{2} §7command", "sender-rejected"));
+        v8_0_0b111.add(PutKeyInstruction.create("§c{0}s", "sender-rejected-valid-item"));
+        v8_0_0b111.add(PutKeyInstruction.create("§4,", "sender-rejected-valid-delimiter"));
 
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §cMissing §7required argument§8: {2}", "argument-missing"));
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §cUnknown§7 argument for {2}§8: §f{3}", "argument-unknown"));
