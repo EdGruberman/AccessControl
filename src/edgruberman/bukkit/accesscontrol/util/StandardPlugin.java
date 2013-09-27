@@ -20,7 +20,7 @@ import edgruberman.bukkit.accesscontrol.versioning.Version;
 
 /**
  * @author EdGruberman (ed@rjump.com)
- * @version 3.0.0
+ * @version 3.1.0
  */
 public abstract class StandardPlugin extends JavaPlugin {
 
@@ -37,7 +37,7 @@ public abstract class StandardPlugin extends JavaPlugin {
     public static final Charset CONFIGURATION_TARGET = Charset.defaultCharset();
 
     /** conflicting configuration files are renamed using this format */
-    public static final String CONFIGURATION_ARCHIVE = "{0} - Archive version {1} - {2,date,yyyyMMddHHmmss}.yml"; // 0 = name, 1 = version, 2 = date
+    public static final String CONFIGURATION_ARCHIVE = "{0} - {2,date,yyyyMMddHHmmss} - archive {1}.yml"; // 0 = name, 1 = version, 2 = date
 
     /** default plugin configuration file name relative to data folder */
     public static final String CONFIGURATION_FILE = "config.yml";
