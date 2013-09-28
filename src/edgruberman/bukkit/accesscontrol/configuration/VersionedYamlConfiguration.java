@@ -65,12 +65,10 @@ public class VersionedYamlConfiguration extends YamlConfiguration {
         return stamped;
     }
 
-    /** temporarily strips version tag for comparison */
     public boolean conflicts(final ConfigurationDefinition definition) {
         return definition.conflicts(this, this.getVersion());
     }
 
-    /** temporarily strips version tag for comparison */
     public void apply(final ConfigurationDefinition definition) {
         definition.apply(this, this.getVersion());
         this.setVersion(definition.getLatest());
