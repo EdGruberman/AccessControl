@@ -20,7 +20,7 @@ import edgruberman.bukkit.accesscontrol.versioning.Version;
 
 /**
  * @author EdGruberman (ed@rjump.com)
- * @version 3.1.0
+ * @version 3.2.0
  */
 public abstract class StandardPlugin extends JavaPlugin {
 
@@ -67,7 +67,18 @@ public abstract class StandardPlugin extends JavaPlugin {
     @Override
     public void reloadConfig() {
         this.config = this.loadConfig(StandardPlugin.CONFIGURATION_FILE);
-        this.setLogLevel(this.getConfig().getString(StandardPlugin.KEY_LOG_LEVEL));
+
+        Level level = StandardPlugin.DEFAULT_LOG_LEVEL;
+        final String name = this.getConfig().getString(StandardPlugin.KEY_LOG_LEVEL);
+        if (name != null) {
+            try {
+                level = Level.parse(name);
+            } catch (final IllegalArgumentException e) {
+                this.getLogger().log(Level.WARNING, "Log level defaulted to {0}; Unrecognized java.util.logging.Level: {1}", new Object[] { level.getName(), name });
+            }
+        }
+        this.setLogLevel(level);
+
         this.getLogger().log(Level.FINEST, "YAML configuration file encoding: {0}", StandardPlugin.CONFIGURATION_TARGET);
     }
 
@@ -141,7 +152,8 @@ public abstract class StandardPlugin extends JavaPlugin {
 
     /** make a backup copy of an existing configuration file */
     protected void archiveConfig(final String name, final VersionedYamlConfiguration config) { //final String resource, final Version version) {
-        final File archive = new File(this.getDataFolder(), MessageFormat.format(StandardPlugin.CONFIGURATION_ARCHIVE, name.replaceAll("(?i)\\.yml$", ""), config.getVersion(), new Date()));
+        final String archiveName = MessageFormat.format(StandardPlugin.CONFIGURATION_ARCHIVE, name.replaceAll("(?i)\\.yml$", ""), config.getVersion(), new Date());
+        final File archive = new File(this.getDataFolder(), archiveName);
         final File existing = new File(this.getDataFolder(), name);
 
         if (!existing.renameTo(archive)) {
@@ -153,21 +165,14 @@ public abstract class StandardPlugin extends JavaPlugin {
                 , new Object[] { existing.getPath(), config.getVersion(), archive.getPath() });
     }
 
-    public void setLogLevel(final String name) {
-        Level level;
-        try { level = Level.parse(name); } catch (final Exception e) {
-            level = StandardPlugin.DEFAULT_LOG_LEVEL;
-            this.getLogger().warning("Log level defaulted to " + level.getName() + "; Unrecognized java.util.logging.Level: " + name + "; " + e);
-        }
-
+    public void setLogLevel(final Level level) {
         // only set the parent handler lower if necessary, otherwise leave it alone for other configurations that have set it
         for (final Handler h : this.getLogger().getParent().getHandlers()) {
             if (h.getLevel().intValue() > level.intValue()) h.setLevel(level);
         }
 
         this.getLogger().setLevel(level);
-        this.getLogger().log(Level.CONFIG, "Log level set to: {0} ({1,number,#})"
-                , new Object[] { this.getLogger().getLevel(), this.getLogger().getLevel().intValue() });
+        this.getLogger().log(Level.CONFIG, "Log level set to: {0} ({1,number,#})", new Object[] { this.getLogger().getLevel(), this.getLogger().getLevel().intValue() });
     }
 
 }
