@@ -15,6 +15,7 @@ import edgruberman.bukkit.accesscontrol.commands.Default;
 import edgruberman.bukkit.accesscontrol.commands.Deny;
 import edgruberman.bukkit.accesscontrol.commands.Effective;
 import edgruberman.bukkit.accesscontrol.commands.Grant;
+import edgruberman.bukkit.accesscontrol.commands.Limit;
 import edgruberman.bukkit.accesscontrol.commands.Reload;
 import edgruberman.bukkit.accesscontrol.commands.Revoke;
 import edgruberman.bukkit.accesscontrol.commands.Trace;
@@ -87,6 +88,11 @@ public final class Main extends StandardPlugin implements Listener {
         this.getCommand("accesscontrol:deny").setExecutor(new Deny(courier, Main.authority, registrar.registrations(), this.getServer()));
         this.getCommand("accesscontrol:grant").setExecutor(new Grant(courier, Main.authority, registrar.registrations(), this.getServer()));
         this.getCommand("accesscontrol:revoke").setExecutor(new Revoke(courier, Main.authority, registrar.registrations(), this.getServer()));
+
+        // group commands
+        final File limits = new File(this.getDataFolder(), "limits.yml");
+        final int defaultLimit = this.getConfig().getInt("create-limit-default");
+        this.getCommand("accesscontrol:limit").setExecutor(new Limit(courier, this.getServer(), Main.authority, this, limits, defaultLimit));
 
         // general commands
         this.getCommand("accesscontrol:reload").setExecutor(new Reload(courier, this));

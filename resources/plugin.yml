@@ -45,6 +45,13 @@ commands:
     permission: accesscontrol.default
     usage: '§f-> §7Usage: §b/<command> §3§opermission §3[§oplayer§3]'
 
+  # ---- group commands ----
+  'accesscontrol:limit':
+    aliases: [limit]
+    description: Set or get number of groups allowed to create (negative values reset to default)
+    permission: accesscontrol.limit
+    usage: '§f-> §7Usage: §b/<command> §3§oname §3[§bgroup§3|§buser§3] §3[§olimit§3]'
+
   # ---- general commands ----
   'accesscontrol:reload':
     description: Reload AccessControl plugin
@@ -66,6 +73,7 @@ permissions:
       accesscontrol.deny: true
       accesscontrol.grant: true
       accesscontrol.revoke: true
+      accesscontrol.limit: true
       accesscontrol.reload: true
   accesscontrol.check:
     description: Can use check command
@@ -87,6 +95,9 @@ permissions:
     default: false
   accesscontrol.revoke:
     description: Can use revoke command
+    default: false
+  accesscontrol.limit:
+    description: Can use limit command
     default: false
   accesscontrol.reload:
     description: Can use reload command

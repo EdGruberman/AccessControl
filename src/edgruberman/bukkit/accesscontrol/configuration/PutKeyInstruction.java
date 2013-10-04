@@ -17,7 +17,6 @@ public class PutKeyInstruction extends KeyInstruction {
         this.value = value;
     }
 
-    /** @return true when data would be lost if applied to base */
     @Override
     public boolean conflicts(final FileConfiguration base) {
         final ConfigurationSection target = this.target(base);

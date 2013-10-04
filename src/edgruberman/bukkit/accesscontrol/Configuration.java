@@ -10,6 +10,7 @@ import edgruberman.bukkit.accesscontrol.configuration.ConfigurationInstruction;
 import edgruberman.bukkit.accesscontrol.configuration.HeaderInstruction;
 import edgruberman.bukkit.accesscontrol.configuration.PutKeyInstruction;
 import edgruberman.bukkit.accesscontrol.configuration.RemoveKeyInstruction;
+import edgruberman.bukkit.accesscontrol.configuration.RenameKeyInstruction;
 import edgruberman.bukkit.accesscontrol.util.StandardPlugin;
 import edgruberman.bukkit.accesscontrol.versioning.StandardVersion;
 
@@ -31,6 +32,8 @@ public final class Configuration {
         final ConfigurationDefinition result = new ConfigurationDefinition();
 
         final List<ConfigurationInstruction> v8_0_0b100 = result.createInstructions(StandardVersion.parse("8.0.0b100"));
+        final List<ConfigurationInstruction> v8_0_0b112 = result.createInstructions(StandardVersion.parse("8.0.0b112"));
+
         v8_0_0b100.add(HeaderInstruction.create(
                 "\n"
                 + "---- comments ----\n"
@@ -44,7 +47,7 @@ public final class Configuration {
         v8_0_0b100.add(PutKeyInstruction.create(Arrays.asList(Main.REFERENCE_SERVER, Main.REFERENCE_WORLD), "permission-order"));
         v8_0_0b100.add(PutKeyInstruction.create("server.user.{0}", "implicit-permission", "user"));
         v8_0_0b100.add(PutKeyInstruction.create("server.group.{0}", "implicit-permission", "group"));
-        v8_0_0b100.add(PutKeyInstruction.create(5, "create-maximum"));
+        v8_0_0b112.add(RenameKeyInstruction.create(5, "create-maximum", "create-limit-default"));
 
         v8_0_0b100.add(RemoveKeyInstruction.create("version"));
 
@@ -57,8 +60,9 @@ public final class Configuration {
         final List<ConfigurationInstruction> v8_0_0b100 = result.createInstructions(StandardVersion.parse("8.0.0b100"));
         final List<ConfigurationInstruction> v8_0_0b110 = result.createInstructions(StandardVersion.parse("8.0.0b110"));
         final List<ConfigurationInstruction> v8_0_0b111 = result.createInstructions(StandardVersion.parse("8.0.0b111"));
+        final List<ConfigurationInstruction> v8_0_0b112 = result.createInstructions(StandardVersion.parse("8.0.0b112"));
 
-        v8_0_0b100.add(HeaderInstruction.create(
+        v8_0_0b112.add(HeaderInstruction.create(
                 "\n"
                 + "---- arguments ----\n"
                 + "check: 0 = generated, 1 = permission, 2 = player, 3 = value(0=false|1=true), 4 = set(0=default|1=set), 5 = source\n"
@@ -78,6 +82,8 @@ public final class Configuration {
                 + "grant-already: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context\n"
                 + "revoke-success: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context, 5 = previous(-1=denied|1=granted)\n"
                 + "revoke-already: 0 = generated, 1 = permission, 2 = name, 3 = type(0=user|1=group), 4 = context\n"
+                + "limit-current: 0 = generated, 1 = name, 2 = type(0=user|1=group), 3 = current, 4 = default\n"
+                + "limit-modified: 0 = generated, 1 = name, 2 = type(0=user|1=group), 3 = previous, 4 = default, 5 = current\n"
                 + "reload: 0 = generated, 1 = plugin name\n"
                 + "sender-rejected: 0 = generated, 1 = acceptable, 2 = label\n"
                 + "sender-rejected-valid-item: 0 = name\n"
@@ -114,6 +120,9 @@ public final class Configuration {
 
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §2Revoked §7{5,choice,-1#deny|1#grant} on §f{2} §7{3,choice,0#user|1#group} §7for §f{1} §7in §f{4}", "revoke-success"));
         v8_0_0b100.add(PutKeyInstruction.create("§f-> {2} §7{3,choice,0#user|1#group} §ealready defaults §f{1} §7in §f{4}", "revoke-already"));
+
+        v8_0_0b112.add(PutKeyInstruction.create("§f-> §7Group limit for §f{1} §7{2,choice,0#user|1#group} is §f{3}", "limit-current"));
+        v8_0_0b112.add(PutKeyInstruction.create("§f-> §2Changed §7group limit for §f{1} §7{2,choice,0#user|1#group} from §f{3} §7to §f{5}", "limit-modified"));
 
         v8_0_0b100.add(PutKeyInstruction.create("§f-> §2Reloaded §7{1} plugin", "reload"));
 
