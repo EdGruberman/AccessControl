@@ -30,8 +30,8 @@ public interface Repository {
     /** used to avoid endless recursion */
     public static class PrincipalReference {
 
-        public Class<? extends Principal> type;
-        public String name;
+        public final Class<? extends Principal> type;
+        public final String name;
 
         public PrincipalReference(final Class<? extends Principal> type, final String name) {
             this.type = type;
